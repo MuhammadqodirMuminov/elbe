@@ -16,3 +16,8 @@ export enum OrderStatus {
     SHIPPED = 'SHIPPED',
     DELIVERED = 'DELIVERED',
 }
+
+export enum PayOptions {
+    SUCCEEDED = 'SUCCEEDED',
+    FAILED = 'FAILED',
+}
