@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsArray, IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { Types } from 'mongoose';
 import { PaymentMethods } from 'src/common';
 
 class ProductDto {
@@ -91,10 +92,10 @@ export class CreateOrderDto {
     @IsNotEmpty()
     paymentMethod: PaymentMethods;
 
-    // @ApiProperty({ type: Types.ObjectId, isArray: true })
-    // @IsOptional()
-    // @IsArray()
-    // appliedDiscounts?: string[];
+    @ApiProperty({ type: Types.ObjectId, isArray: true })
+    @IsOptional()
+    @IsArray()
+    appliedDiscounts?: string[];
 
     // @ApiProperty()
     // @IsOptional()

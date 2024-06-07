@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { OrderStatus, PaymentMethods, PaymentStatus } from 'src/common';
+import { Discount } from 'src/discounts/models/discount.schema';
 
 export type OrderDocument = Order & Document;
 
@@ -77,8 +78,8 @@ export class Order {
     @Prop({ type: String, enum: OrderStatus, default: OrderStatus.PLACED, required: true })
     shippingStatus: OrderStatus;
 
-    // @Prop({ type: [{ type: MongooseSchema.Types.ObjectId, ref: 'Discount' }], required: false })
-    // appliedDiscounts?: MongooseSchema.Types.ObjectId[];
+    @Prop({ type: [{ type: Types.ObjectId, ref: Discount.name }], required: false })
+    appliedDiscounts?: Types.ObjectId[];
 
     // @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'DeliveryOption', required: false })
     // deliveryOption?: MongooseSchema.Types.ObjectId;
