@@ -1,0 +1,37 @@
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { CreateProductDto } from './dto/create-product.dto';
+import { QueryProductDto } from './dto/query.dto';
+import { ProductsService } from './products.service';
+
+@ApiTags('products')
+@Controller('products')
+export class ProductsController {
+    constructor(private readonly productsService: ProductsService) {}
+
+    @Post()
+    create(@Body() createProductDto: CreateProductDto) {
+        return this.productsService.create(createProductDto);
+    }
+
+    @Get()
+    findAll(@Query() query: QueryProductDto) {
+        return this.productsService.findAll(query);
+    }
+
+    @Get(':id')
+    findOne(@Param('id') id: string) {
+        return this.productsService.findOne(id);
+    }
+
+    @Put(':id')
+    update(@Param('id') id: string, @Body() updateProductDto: any) {
+        return this.productsService.update(id, updateProductDto);
+    }
+
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @Delete(':id')
+    remove(@Param('id') id: string) {
+        return this.productsService.remove(id);
+    }
+}

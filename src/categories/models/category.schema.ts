@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Types } from 'mongoose';
 import { AbstractDocument } from 'src/database/abstract.schema';
+import { ProductDocument } from 'src/products/models/product.schema';
 
 @Schema({ versionKey: false })
 export class CategoryDocument extends AbstractDocument {
@@ -18,6 +19,9 @@ export class CategoryDocument extends AbstractDocument {
 
     @Prop()
     image_url: string;
+
+    @Prop({ type: [{ type: Types.ObjectId, ref: ProductDocument.name }], default: [] })
+    products?: Types.ObjectId[];
 }
 
 export const CategorySchema = SchemaFactory.createForClass(CategoryDocument);
