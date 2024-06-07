@@ -8,6 +8,10 @@ import { DatabaseModule } from './database/database.module';
 import { MailModule } from './mail/mail.module';
 import { UploadModule } from './upload/upload.module';
 import { ProductsModule } from './products/products.module';
+import { CartModule } from './cart/cart.module';
+import { OrdersModule } from './orders/orders.module';
+import { PaymentModule } from './payment/payment.module';
+import { DiscountsModule } from './discounts/discounts.module';
 
 @Module({
     imports: [
@@ -38,6 +42,10 @@ import { ProductsModule } from './products/products.module';
         CategoriesModule,
         UploadModule,
         ProductsModule,
+        CartModule,
+        OrdersModule,
+        PaymentModule,
+        DiscountsModule,
     ],
 })
 export class AppModule {}
