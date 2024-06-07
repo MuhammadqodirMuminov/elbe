@@ -68,7 +68,7 @@ export class Order {
         zip?: string;
         country?: string;
     };
-
+    //
     @Prop({ type: String, enum: PaymentMethods, default: PaymentMethods.STRIPE, required: true })
     paymentMethod: PaymentMethods;
 
