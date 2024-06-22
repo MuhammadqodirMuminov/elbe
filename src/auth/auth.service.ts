@@ -160,4 +160,13 @@ export class AuthService {
         if (existUser) throw new BadRequestException('User already exists with this email, please login');
         return true;
     }
+
+    async me(user: UserDocument) {
+        try {
+            const existUser = await this.usersService.findWithQuery({ email: user.email, status: USER_STATUS.ACTIVE });
+            return existUser;
+        } catch (error) {
+            throw new BadRequestException(error?.message);
+        }
+    }
 }
