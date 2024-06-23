@@ -1,10 +1,10 @@
-import { BadGatewayException, BadRequestException, Injectable, UnprocessableEntityException } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, HttpException, Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Response } from 'express';
 import { Types } from 'mongoose';
 import { RandomCodeGenerate, comparePassword, hashPassword } from 'src/common';
 import { MailService } from './../mail/mail.service';
+import { SentOtpDto } from './dto/login.dto';
 import { ForgotPasswordDto, ForgotPasswordVerifyDto, ResetPasswordDto } from './dto/password.dto';
 import { RegisterDto, VerifyDto } from './dto/register.dto';
 import { ROLES, USER_STATUS } from './interface/auth.interface';
@@ -52,7 +52,7 @@ export class AuthService {
         };
     }
 
-    async verify({ email, confirmCode }: VerifyDto, response: Response) {
+    async verify({ email, confirmCode }: VerifyDto) {
         await this.mailService.verifyOtp(email, confirmCode);
 
         const userExist = await this.usersService.getUser({ email });
@@ -61,46 +61,22 @@ export class AuthService {
             status: USER_STATUS.ACTIVE,
         });
 
-        const tokenPayload: TokenPayload = {
-            userId: user._id,
-            role: user.role,
-        };
-
-        const expires = this.setExpires();
-
-        const token = this.jwtService.sign(tokenPayload);
-
-        response.cookie('Authentication', token, {
-            httpOnly: true,
-            expires,
+        const tokens = await this.issueTokenPair({
+            id: user._id.toString(),
         });
 
         delete user.password;
 
-        return response.send(user);
+        return { data: user, ...tokens };
     }
 
-    async login(user: UserDocument, response: Response) {
-        const tokenPayload: TokenPayload = {
-            userId: user._id,
+    async login(user: UserDocument) {
+        const tokens = await this.issueTokenPair({
+            id: user._id.toString(),
             role: user.role,
-        };
-
-        const expires = this.setExpires();
-
-        const token = this.jwtService.sign(tokenPayload);
-
-        response.cookie('Authentication', token, {
-            httpOnly: true,
-            expires,
         });
-    }
 
-    async logout(response: Response) {
-        response.cookie('Authentication', '', {
-            httpOnly: true,
-            expires: new Date(),
-        });
+        return { data: user, ...tokens };
     }
 
     async forgotPassword({ email }: ForgotPasswordDto) {
@@ -164,9 +140,57 @@ export class AuthService {
     async me(user: UserDocument) {
         try {
             const existUser = await this.usersService.findWithQuery({ email: user.email, status: USER_STATUS.ACTIVE });
-            return existUser;
+
+            const tokens = await this.issueTokenPair({
+                id: user._id.toString(),
+            });
+            return { data: existUser, ...tokens };
         } catch (error) {
             throw new BadRequestException(error?.message);
+        }
+    }
+
+    async issueTokenPair(payload: { id: string; role?: any }) {
+        const refreshToken = await this.jwtService.signAsync(
+            {
+                userId: payload.id,
+                role: payload.role,
+                type: 'refresh',
+            },
+            { expiresIn: '15d' },
+        );
+
+        const accessToken = await this.jwtService.signAsync(
+            {
+                userId: payload.id,
+                role: payload.role,
+                type: 'access',
+            },
+            {
+                expiresIn: '5d',
+            },
+        );
+
+        return { refreshToken, accessToken };
+    }
+
+    async sentOtp(body: SentOtpDto) {
+        try {
+            const code = RandomCodeGenerate();
+
+            await this.mailService.sendOtp(body.email, String(code));
+
+            const attepmt = await this.mailService.attepmt({
+                email: body.email,
+                code: +code,
+            });
+
+            return {
+                message: 'Otp sent successfully',
+                success: true,
+            };
+        } catch (error) {
+            throw new HttpException(error?.message || 'Internal server error', error?.status || 500);
         }
     }
 }
