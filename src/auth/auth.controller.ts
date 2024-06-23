@@ -1,9 +1,8 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { Response } from 'express';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { CurrentUser } from './current-user.decorator';
-import { LoginDto } from './dto/login.dto';
+import { LoginDto, SentOtpDto } from './dto/login.dto';
 import { ForgotPasswordDto, ForgotPasswordVerifyDto, ResetPasswordDto } from './dto/password.dto';
 import { RegisterDto, VerifyDto } from './dto/register.dto';
 import JwtAuthGuard from './guards/jwt-auth.guard';
@@ -21,23 +20,15 @@ export class AuthController {
     }
 
     @Post('verify')
-    async verify(@Body() verifyDto: VerifyDto, @Res({ passthrough: true }) response: Response) {
-        return await this.authService.verify(verifyDto, response);
+    async verify(@Body() verifyDto: VerifyDto) {
+        return await this.authService.verify(verifyDto);
     }
 
     @HttpCode(HttpStatus.OK)
     @UseGuards(LocalAuthGuard)
     @Post('login')
-    async login(@Body() loginDto: LoginDto, @CurrentUser() user: UserDocument, @Res({ passthrough: true }) response: Response) {
-        await this.authService.login(user, response);
-        response.send(user);
-    }
-
-    @HttpCode(HttpStatus.NO_CONTENT)
-    @UseGuards(JwtAuthGuard)
-    @Post('logout')
-    async logout(@CurrentUser() user: UserDocument, @Res({ passthrough: true }) response: Response) {
-        return await this.authService.logout(response);
+    async login(@Body() loginDto: LoginDto, @CurrentUser() user: UserDocument) {
+        return await this.authService.login(user);
     }
 
     @Post('forgot-password')
@@ -50,12 +41,19 @@ export class AuthController {
         return await this.authService.forgotPasswordVerification(forgotPasswordVerifyDto);
     }
 
+    @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Post('reset-password')
     async resetPassword(@CurrentUser() user: UserDocument, @Body() resetPasswordDto: ResetPasswordDto) {
         return await this.authService.resetPassword(user, resetPasswordDto);
     }
 
+    @Post('send-otp')
+    async sentOtp(@Body() body: SentOtpDto) {
+        return await this.authService.sentOtp(body);
+    }
+
+    @ApiBearerAuth()
     @UseGuards(JwtAuthGuard)
     @Get('me')
     async getMe(@CurrentUser() user: UserDocument) {
