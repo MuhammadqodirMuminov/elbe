@@ -177,7 +177,7 @@ export class MailService {
                 subject: 'Email Verification',
                 from: 'muminovmuhammadqodir0@gmail.com',
                 text: 'Verify your email end enjoy free courses.',
-                html: `<h1>To reset your password  press  the  👉${resetPasswordUrl + token} </h1>`,
+                html: `<h1>To reset your password  press  the  👉${resetPasswordUrl + `?token=` + token} </h1>`,
             };
 
             await SendGrid.send(emailData);
