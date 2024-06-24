@@ -24,5 +24,6 @@ jobs:
                   username: ${{ secrets.SERVER_USERNAME }}
                   key: ${{ secrets.SERVER_PRIVATE_KEY }}
                   script: |
+                      ls
                       cd /elbe
                       ./deploy.sh
