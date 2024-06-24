@@ -1,5 +1,5 @@
 import { S3Client } from '@aws-sdk/client-s3';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Response } from 'express';
@@ -51,5 +51,13 @@ export class UploadService {
     async get(id: string, res: Response, range: string) {
         const media = await this.uplodModel.findById({ _id: id });
         return await this.serviceHandler.get(media, res, range);
+    }
+
+    async findOne(_id: string) {
+        const file = await this.uplodModel.findOne({ _id: _id });
+        if (!file) {
+            throw new NotFoundException('No such file found');
+        }
+        return file;
     }
 }
