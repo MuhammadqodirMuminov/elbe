@@ -43,6 +43,7 @@ export class AuthService {
                 ...registerDto,
                 role: ROLES.USER,
                 status: USER_STATUS.PENDING,
+                avatar: null,
             });
         }
 

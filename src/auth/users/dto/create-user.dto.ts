@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ROLES, USER_STATUS } from 'src/auth/interface/auth.interface';
 
 export class CreateUserDto {
@@ -25,6 +25,11 @@ export class CreateUserDto {
     @IsEnum(ROLES)
     @IsNotEmpty()
     role: ROLES;
+
+    @ApiProperty()
+    @IsMongoId()
+    @IsOptional()
+    avatar: string;
 
     status: USER_STATUS;
 }
