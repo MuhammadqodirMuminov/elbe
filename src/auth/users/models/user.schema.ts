@@ -1,5 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
 import { ROLES, USER_STATUS } from 'src/auth/interface/auth.interface';
+import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { AbstractDocument } from '../../../database/abstract.schema';
 
 @Schema({ versionKey: false })
@@ -21,6 +23,9 @@ export class UserDocument extends AbstractDocument {
 
     @Prop({ type: String, enum: USER_STATUS })
     status: USER_STATUS;
+
+    @Prop({ type: String, required: false, ref: UploadDocuemnt.name })
+    avatar: Types.ObjectId;
 }
 
 export const UserSchema = SchemaFactory.createForClass(UserDocument);

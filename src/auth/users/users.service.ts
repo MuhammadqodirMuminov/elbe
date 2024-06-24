@@ -1,10 +1,10 @@
 import { Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { FilterQuery, Model } from 'mongoose';
+import mongoose, { FilterQuery, Model, Types } from 'mongoose';
 import { comparePassword, hashPassword } from 'src/common';
+import { UploadService } from 'src/upload/upload.service';
 import { USER_STATUS } from '../interface/auth.interface';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { UserDocument } from './models/user.schema';
 import { UsersModule } from './users.module';
 import { UsersRepository } from './users.repository';
@@ -15,12 +15,14 @@ export class UsersService {
         private readonly usersRepository: UsersRepository,
         @InjectModel(UserDocument.name)
         private readonly userModel: Model<UsersModule>,
+        private readonly uploadService: UploadService,
     ) {}
 
     async createUser(data: CreateUserDto) {
         await this.validateCreateUserData(data);
         const userDocument = await this.usersRepository.create({
             ...data,
+            avatar: new Types.ObjectId(data.avatar),
             password: await hashPassword(data.password),
         });
         return this.getUserFromDocument(userDocument);
@@ -71,12 +73,20 @@ export class UsersService {
         return await this.usersRepository.find({});
     }
 
-    async update(id: string, updateUserDto: UpdateUserDto) {
+    async update(id: string, body: Partial<CreateUserDto>) {
+        const updateData: Record<string, any> = {
+            ...body,
+        };
+
         const userDocument = await this.usersRepository.findOne({
             _id: new mongoose.Types.ObjectId(id),
         });
 
-        const updatedUser = await this.usersRepository.fundOneAndUpdate(userDocument._id, updateUserDto);
+        if (body.avatar) {
+            updateData.avatar = new Types.ObjectId(body.avatar);
+        }
+
+        const updatedUser = await this.usersRepository.fundOneAndUpdate(userDocument._id, updateData);
         return updatedUser;
     }
 

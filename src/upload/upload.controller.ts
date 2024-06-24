@@ -1,13 +1,7 @@
-import {
-    Controller,
-    MaxFileSizeValidator,
-    ParseFilePipe,
-    Post,
-    UploadedFile,
-    UseInterceptors,
-} from '@nestjs/common';
+import { Controller, Get, Headers, HttpStatus, Param, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 import { UploadService } from './upload.service';
 
 @ApiTags('upload')
@@ -15,6 +9,11 @@ import { UploadService } from './upload.service';
 export class UploadController {
     constructor(private readonly uploadService: UploadService) {}
 
+    @Post('/me')
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: 'Update logged in user',
+    })
     @ApiConsumes('multipart/form-data')
     @ApiBody({
         schema: {
@@ -24,17 +23,19 @@ export class UploadController {
             },
         },
     })
-    @ApiConsumes('multipart/form-data')
-    @Post('upload')
     @UseInterceptors(FileInterceptor('file'))
-    async upload(
-        @UploadedFile(
-            new ParseFilePipe({
-                validators: [new MaxFileSizeValidator({ maxSize: 10485760 })],
-            }),
-        )
-        file: Express.Multer.File,
-    ) {
-        return await this.uploadService.upload(file);
+    async update(@UploadedFile() file: Express.Multer.File) {
+        return await this.uploadService.create(file);
     }
+
+    @Get(':id')
+    async getMedia(@Res() res: Response, @Param('id') id: string, @Headers() headers?: Record<string, any>) {
+        return await this.uploadService.get(id, res, headers.range);
+    }
+
+    // @HttpCode(HttpStatus.NO_CONTENT)
+    // @Delete(':id')
+    // async delete(@Param('id') fileId: string) {
+    //     return await this.uploadService.deleteMedia(fileId);
+    // }
 }
