@@ -25,5 +25,5 @@ jobs:
                   key: ${{ secrets.SERVER_PRIVATE_KEY }}
                   script: |
                       ls
-                      cd /elbe
+                      cd /home/ubuntu/elbe
                       ./deploy.sh
