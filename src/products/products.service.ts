@@ -68,6 +68,15 @@ export class ProductsService {
             throw new NotFoundException('Product not found');
         }
 
+        return product;
+    }
+
+    async detail(id: string) {
+        const product = await this.productModel.findById(id, {}, { populate: [{ path: 'category' }, { path: 'images', model: UploadDocuemnt.name }] }).exec();
+        if (!product) {
+            throw new NotFoundException('Product not found');
+        }
+
         const recomended = await this.productModel.find({ category: product.category._id }).populate(['category', { path: 'images', model: UploadDocuemnt.name }, 'reviews']);
 
         return { product, recomendations: recomended.slice(0, 8) };
