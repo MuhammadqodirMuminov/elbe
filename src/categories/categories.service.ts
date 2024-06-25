@@ -42,6 +42,7 @@ export class CategoriesService {
 
     async findOne(_id: string) {
         return await this.categoryRepository.findOne({ _id }, ['parent_id', 'products', 'image']);
+        //change
     }
 
     async update(_id: string, updateCategoryDto: UpdateCategoryDto) {
