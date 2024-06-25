@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { ProductDocument } from 'src/products/models/product.schema';
+import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { UploadService } from 'src/upload/upload.service';
 import { CategoryRepository } from './category.repository';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -35,7 +36,7 @@ export class CategoriesService {
     }
 
     async findAll() {
-        const categories = await this.categoryModel.find({}, {}, { populate: [{ path: 'products', model: ProductDocument.name }, { path: 'image' }] });
+        const categories = await this.categoryModel.find({}, {}, { populate: [{ path: 'products', model: ProductDocument.name, populate: [{ path: 'images', model: UploadDocuemnt.name }] }, { path: 'image' }] });
 
         return categories;
     }
