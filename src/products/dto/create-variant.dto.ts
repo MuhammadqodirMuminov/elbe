@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Types } from 'mongoose';
 
 export class VariantDto {
     @ApiProperty({ example: 'blue' })
@@ -7,24 +8,18 @@ export class VariantDto {
     @IsString()
     color: string;
 
-    @ApiProperty({ example: 'xl' })
+    @ApiProperty({ isArray: true, example: ['xl'] })
     @IsNotEmpty()
-    @IsString()
-    size: string;
+    @IsArray()
+    size: string[];
 
-    @ApiProperty({ example: 2, required: false, description: 'this is optonal field' })
-    @IsOptional()
-    @IsNumber()
-    stock: number;
-
-    @ApiProperty({ example: 4442, required: false, description: 'this field is optional id price is differance from main product price,Price is in cent' })
+    @ApiProperty({ example: 4442, required: false, description: 'this field is optional id price is differance from main product price,Price is in cent', default: 0 })
     @IsOptional()
     @IsNumber()
     price: number;
 
-    @ApiProperty({ isArray: true, type: String, required: false, description: 'this field is optional' })
-    @IsArray()
+    @ApiProperty({ type: String, required: false, description: 'this field is optional' })
+    @IsMongoId()
     @IsOptional()
-    @IsString({ each: true })
-    images: string[];
+    image: Types.ObjectId;
 }

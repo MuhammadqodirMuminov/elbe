@@ -27,7 +27,7 @@ export class CreateProductDto {
 
     @ApiProperty({ isArray: true, type: String })
     @IsArray()
-    @IsString({ each: true })
+    @IsMongoId({ each: true })
     images: string[];
 
     @ApiProperty({ type: Number, required: true })
@@ -38,7 +38,6 @@ export class CreateProductDto {
     @ApiProperty({ type: VariantDto, isArray: true })
     @IsOptional()
     @IsArray()
-    // @ValidateNested({ each: true })
     @Type(() => VariantDto)
     variants: VariantDto[];
 }
