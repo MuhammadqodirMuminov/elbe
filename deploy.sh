@@ -1,5 +1,5 @@
 
-cd /elbe
+cd /home/ubuntu/elbe
 
 git pull origin main
 
