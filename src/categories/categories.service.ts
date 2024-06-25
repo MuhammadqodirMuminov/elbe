@@ -41,8 +41,8 @@ export class CategoriesService {
     }
 
     async findOne(_id: string) {
-        return await this.categoryRepository.findOne({ _id }, ['parent_id', 'products', 'image']);
-        //change
+        const category = await this.categoryRepository.findOne({ _id }, ['parent_id', 'image']);
+        return await this.categoryModel.populate(category, { path: 'products', model: ProductDocument.name });
     }
 
     async update(_id: string, updateCategoryDto: UpdateCategoryDto) {
