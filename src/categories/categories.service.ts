@@ -35,7 +35,7 @@ export class CategoriesService {
     }
 
     async findAll() {
-        const categories = await this.categoryModel.find({}, {}, { populate: [{ path: 'products' }, { path: 'image' }] });
+        const categories = await this.categoryModel.find({}, {}, { populate: [{ path: 'products', model: ProductDocument.name }, { path: 'image' }] });
 
         return categories;
     }
