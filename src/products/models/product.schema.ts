@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { AbstractDocument } from 'src/database/abstract.schema';
+import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { VariantDto } from '../dto/create-variant.dto';
 
 @Schema({ versionKey: false, timestamps: true })
@@ -17,8 +18,8 @@ export class ProductDocument extends AbstractDocument {
     @Prop({ type: Types.ObjectId, ref: 'CategoryDocument', default: null })
     category: Types.ObjectId;
 
-    @Prop([String])
-    images: string[];
+    @Prop([{ type: Types.ObjectId, ref: UploadDocuemnt.name }])
+    images: Types.ObjectId[];
 
     @Prop({ required: true })
     stock: number;

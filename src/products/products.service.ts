@@ -1,8 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { CategoryRepository } from 'src/categories/category.repository';
 import { CategoryDocument } from 'src/categories/models/category.schema';
+import { UploadDocuemnt } from 'src/upload/models/upload.schema';
+import { UploadService } from 'src/upload/upload.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -16,14 +18,23 @@ export class ProductsService {
         private readonly productRepository: ProductRepository,
         private readonly categoryRepository: CategoryRepository,
         @InjectModel(CategoryDocument.name) private categoryModel: Model<CategoryDocument>,
+        private readonly uploadService: UploadService,
     ) {}
 
     async create(body: CreateProductDto): Promise<ProductDocument> {
         try {
             const category = await this.categoryRepository.findOne({ _id: body.category });
 
+            const images = Promise.all(
+                body.images.map(async (image) => {
+                    return (await this.uploadService.findOne(image.toString()))._id;
+                }),
+            );
+
             const createdProduct = await this.productRepository.create({
                 ...body,
+                category: new Types.ObjectId(body.category),
+                images: await images,
             });
 
             await this.categoryModel.updateOne({ _id: category._id }, { $push: { products: createdProduct._id } });
@@ -43,7 +54,7 @@ export class ProductsService {
                 .find(filter)
                 .skip((+page - 1) * +limit)
                 .limit(Number(limit))
-                .populate(['category', 'reviews'])
+                .populate(['category', { path: 'images', model: UploadDocuemnt.name }, 'reviews'])
                 .exec(),
             await this.productModel.countDocuments(filter).exec(),
         ]);
@@ -51,18 +62,34 @@ export class ProductsService {
         return { data: data, total };
     }
 
-    async findOne(id: string): Promise<ProductDocument> {
-        const product = await this.productModel.findById(id, {}, { populate: ['category', 'reviews'] }).exec();
+    async findOne(id: string): Promise<any> {
+        const product = await this.productModel.findById(id, {}, { populate: [{ path: 'category' }, { path: 'images', model: UploadDocuemnt.name }] }).exec();
         if (!product) {
             throw new NotFoundException('Product not found');
         }
-        return product;
+
+        const recomended = await this.productModel.find({ category: product.category._id }).populate(['category', { path: 'images', model: UploadDocuemnt.name }, 'reviews']);
+
+        return { product, recomendations: recomended.slice(0, 8) };
     }
 
     async update(id: string, body: UpdateProductDto): Promise<ProductDocument> {
+        const updatedData: Record<string, any> = { ...body };
+
         if (body.category) {
-            await this.categoryRepository.findOne({ _id: body.category });
+            const category = await this.categoryRepository.findOne({ _id: body.category });
+            updatedData.category = category._id;
         }
+
+        if (body.images) {
+            const images = Promise.all(
+                body.images.map(async (image) => {
+                    return (await this.uploadService.findOne(image.toString()))._id;
+                }),
+            );
+            updatedData.images = await images;
+        }
+
         const updatedProduct = await this.productModel.findByIdAndUpdate(id, body, { new: true }).exec();
         if (!updatedProduct) {
             throw new NotFoundException('Product not found');
