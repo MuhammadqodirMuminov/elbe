@@ -46,3 +46,9 @@ export class CreateVariantDto {
     @IsNotEmpty()
     productId: string;
 }
+
+export class AddImageDto {
+    @ApiProperty({ type: [Types.ObjectId], required: true, isArray: true })
+    @IsArray()
+    images: string[];
+}

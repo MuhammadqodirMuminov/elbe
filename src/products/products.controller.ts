@@ -20,12 +20,12 @@ export class ProductsController {
     }
 
     @Get('detail/:id')
-    detail(@Param('id') id: string) {
-        return this.productsService.detail(id);
+    async detail(@Param('id') id: string) {
+        return await this.productsService.detail(id);
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
+    async findOne(@Param('id') id: string) {
         return this.productsService.findOne(id);
     }
 
@@ -36,7 +36,7 @@ export class ProductsController {
 
     @HttpCode(HttpStatus.NO_CONTENT)
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.productsService.remove(id);
+    async remove(@Param('id') id: string) {
+        return await this.productsService.remove(id);
     }
 }

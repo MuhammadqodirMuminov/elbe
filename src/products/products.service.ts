@@ -1,10 +1,11 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CategoryRepository } from 'src/categories/category.repository';
 import { CategoryDocument } from 'src/categories/models/category.schema';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { UploadService } from 'src/upload/upload.service';
+import { VariantDocument } from 'src/variants/models/variant.schema';
 import { VariantsService } from 'src/variants/variants.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query.dto';
@@ -20,12 +21,12 @@ export class ProductsService {
         private readonly categoryRepository: CategoryRepository,
         @InjectModel(CategoryDocument.name) private categoryModel: Model<CategoryDocument>,
         private readonly uploadService: UploadService,
-        private readonly variantService: VariantsService,
+        @Inject(forwardRef(() => VariantsService)) private readonly variantService: VariantsService,
     ) {}
 
     async create(body: CreateProductDto): Promise<ProductDocument> {
         try {
-            const category = await this.categoryRepository.findOne({ _id: body.category });
+            await this.categoryRepository.findOne({ _id: body.category });
 
             const images = (await this.uploadService.findOne(body.image.toString()))._id;
 
@@ -35,8 +36,6 @@ export class ProductsService {
                 image: images,
                 variants: [],
             });
-
-            await this.categoryModel.updateOne({ _id: category._id }, { $push: { products: createdProduct._id } });
 
             return createdProduct;
         } catch (error) {
@@ -53,7 +52,11 @@ export class ProductsService {
                 .find(filter)
                 .skip((+page - 1) * +limit)
                 .limit(Number(limit))
-                .populate(['category', { path: 'image', model: UploadDocuemnt.name }])
+                .populate([
+                    { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
+                    { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
+                ])
+                .populate([{ path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } }] }])
                 .exec(),
             await this.productModel.countDocuments(filter).exec(),
         ]);
@@ -62,7 +65,16 @@ export class ProductsService {
     }
 
     async findOne(id: string): Promise<any> {
-        const product = await this.productModel.findById(id, {}, { populate: [{ path: 'category' }, { path: 'images', model: UploadDocuemnt.name }] }).exec();
+        const product = await this.productModel.findById(id, {}, { populate: [{ path: 'category' }] }).exec();
+        if (!product) {
+            throw new NotFoundException('Product not found');
+        }
+
+        return product;
+    }
+
+    async getOne(id: string): Promise<ProductDocument> {
+        const product = await this.productModel.findById(id, {}).exec();
         if (!product) {
             throw new NotFoundException('Product not found');
         }
@@ -71,17 +83,35 @@ export class ProductsService {
     }
 
     async detail(id: string) {
-        const product = await this.productModel.findById(id, {}, { populate: [{ path: 'category' }, { path: 'images', model: UploadDocuemnt.name }] }).exec();
+        const product = await this.productModel
+            .findById(
+                id,
+                {},
+                {
+                    populate: [
+                        { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
+                        { path: 'image', select: { _id: 1, url: 1 } },
+                        { path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', select: { _id: 1, url: 1 }, model: UploadDocuemnt.name }] },
+                    ],
+                },
+            )
+            .exec();
         if (!product) {
             throw new NotFoundException('Product not found');
         }
 
-        const recomended = await this.productModel.find({ category: product.category._id }).populate(['category', { path: 'images', model: UploadDocuemnt.name }, 'reviews']);
+        const recomended = await this.productModel.find({ category: product.category._id }).populate([
+            { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
+            { path: 'image', select: { _id: 1, url: 1 } },
+            { path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', select: { _id: 1, url: 1 }, model: UploadDocuemnt.name }] },
+        ]);
 
         return { product, recomendations: recomended.slice(0, 8) };
     }
 
     async update(id: string, body: UpdateProductDto): Promise<ProductDocument> {
+        const product = await this.getOne(id);
+
         const updatedData: Record<string, any> = { ...body };
 
         if (body.category) {
@@ -92,20 +122,28 @@ export class ProductsService {
         if (body.image) {
             const images = (await this.uploadService.findOne(body.image.toString()))._id;
             updatedData.image = images;
+            await this.uploadService.deleteMedia(product.image.toString());
         }
 
         const updatedProduct = await this.productModel.findByIdAndUpdate(id, body, { new: true }).exec();
-        if (!updatedProduct) {
-            throw new NotFoundException('Product not found');
-        }
+
         return updatedProduct;
     }
 
     async remove(id: string): Promise<any> {
-        const deletedProduct = await this.productModel.findByIdAndDelete(id).exec();
-        if (!deletedProduct) {
-            throw new NotFoundException('Product not found');
+        const product = await this.getOne(id);
+        if (product.variants.length !== 0) {
+            await Promise.all(
+                product.variants.map(async (v) => {
+                    await this.variantService.remove(v._id.toString());
+                }),
+            );
         }
+
+        await this.uploadService.deleteMedia(product.image.toString());
+
+        const deletedProduct = await this.productModel.findByIdAndDelete(id).exec();
+
         return deletedProduct;
     }
 }
