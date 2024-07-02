@@ -21,8 +21,6 @@ export class ProductDocument extends AbstractDocument {
     @Prop({ type: Types.ObjectId, ref: UploadDocuemnt.name })
     image: Types.ObjectId;
 
-    
-
     @Prop([{ type: Types.ObjectId, required: true, ref: VariantDocument.name }])
     variants: VariantDocument[];
 }
