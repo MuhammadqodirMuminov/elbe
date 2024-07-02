@@ -11,7 +11,7 @@ export class VariantDocument extends AbstractDocument {
     @Prop({ type: String })
     color: string;
 
-    @Prop({ type: [String] })
+    @Prop({ type: String })
     size: string;
 
     @Prop({ type: Number, required: false })
@@ -31,6 +31,9 @@ export class VariantDocument extends AbstractDocument {
 
     @Prop([{ type: Types.ObjectId, ref: 'Review', default: [] }])
     reviews?: Types.ObjectId[];
+
+    @Prop({ type: Types.ObjectId, required: true, ref: 'ProductDocument' })
+    productId: Types.ObjectId;
 }
 
 export const VariantSchema = SchemaFactory.createForClass(VariantDocument);
