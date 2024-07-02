@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { Model, Types } from 'mongoose';
 import { ProductDocument } from 'src/products/models/product.schema';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { UploadService } from 'src/upload/upload.service';
@@ -35,15 +35,69 @@ export class CategoriesService {
         }
     }
 
+    async getAllParents() {
+        try {
+            const parents = await this.categoryModel.find(
+                { parent_id: null },
+                { products: 0 },
+                {
+                    populate: [{ path: 'image', select: { _id: 1, url: 1 } }],
+                },
+            );
+
+            return await Promise.all(
+                parents.map(async (p) => {
+                    const c = JSON.parse(JSON.stringify(p));
+
+                    const childs = await this.categoryModel.find({ parent_id: new Types.ObjectId(p._id) }, { parent_id: 0, products: 0 }, { populate: [{ path: 'image', select: { _id: 1, url: 1 } }] }).exec();
+
+                    return { ...c, childs };
+                }),
+            );
+        } catch (error) {
+            throw new BadRequestException(error?.message);
+        }
+    }
+
+    async getChildByParentId(parentId: string) {
+        try {
+            const childs = await this.categoryModel.find({ parent_id: new Types.ObjectId(parentId) }, { parent_id: 0 }, { populate: [{ path: 'image', select: { _id: 1, url: 1 } }] }).exec();
+
+            return await Promise.all(
+                childs.map(async (child) => {
+                    const c = JSON.parse(JSON.stringify(child));
+
+                    const products = await this.productModel.find({ category: new Types.ObjectId(child._id) });
+
+                    return { ...c, products };
+                }),
+            );
+        } catch (error) {
+            throw new BadRequestException(error?.message);
+        }
+    }
+
     async findAll() {
-        const categories = await this.categoryModel.find({}, {}, { populate: [{ path: 'products', model: ProductDocument.name, populate: [{ path: 'images', model: UploadDocuemnt.name }] }, { path: 'image' }] });
+        const categories = await this.categoryModel.find({}, {}, { populate: [{ path: 'products', model: ProductDocument.name, populate: [{ path: 'image', model: UploadDocuemnt.name }] }, { path: 'image' }, { path: 'parent_id', model: CategoryDocument.name, select: { products: 0 } }] });
 
         return categories;
     }
 
     async findOne(_id: string) {
-        const category = await this.categoryRepository.findOne({ _id }, ['parent_id', 'image']);
-        return await this.categoryModel.populate(category, { path: 'products', model: ProductDocument.name });
+        const category = await this.categoryModel.findOne(
+            { _id },
+            {},
+            {
+                populate: [
+                    { path: 'parent_id', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
+                    { path: 'image', select: { _id: 1, url: 1 } },
+                ],
+            },
+        );
+
+        const products = await this.productModel.find({ category: new Types.ObjectId(category._id) });
+
+        return { ...JSON.parse(JSON.stringify(category)), products: products };
     }
 
     async update(_id: string, updateCategoryDto: UpdateCategoryDto) {

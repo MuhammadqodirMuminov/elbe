@@ -5,6 +5,7 @@ import { CategoryRepository } from 'src/categories/category.repository';
 import { CategoryDocument } from 'src/categories/models/category.schema';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { UploadService } from 'src/upload/upload.service';
+import { VariantsService } from 'src/variants/variants.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -19,22 +20,20 @@ export class ProductsService {
         private readonly categoryRepository: CategoryRepository,
         @InjectModel(CategoryDocument.name) private categoryModel: Model<CategoryDocument>,
         private readonly uploadService: UploadService,
+        private readonly variantService: VariantsService,
     ) {}
 
     async create(body: CreateProductDto): Promise<ProductDocument> {
         try {
             const category = await this.categoryRepository.findOne({ _id: body.category });
 
-            const images = Promise.all(
-                body.images.map(async (image) => {
-                    return (await this.uploadService.findOne(image.toString()))._id;
-                }),
-            );
+            const images = (await this.uploadService.findOne(body.image.toString()))._id;
 
             const createdProduct = await this.productRepository.create({
                 ...body,
                 category: new Types.ObjectId(body.category),
-                images: await images,
+                image: images,
+                variants: [],
             });
 
             await this.categoryModel.updateOne({ _id: category._id }, { $push: { products: createdProduct._id } });
@@ -54,7 +53,7 @@ export class ProductsService {
                 .find(filter)
                 .skip((+page - 1) * +limit)
                 .limit(Number(limit))
-                .populate(['category', { path: 'images', model: UploadDocuemnt.name }, 'reviews'])
+                .populate(['category', { path: 'image', model: UploadDocuemnt.name }])
                 .exec(),
             await this.productModel.countDocuments(filter).exec(),
         ]);
@@ -90,13 +89,9 @@ export class ProductsService {
             updatedData.category = category._id;
         }
 
-        if (body.images) {
-            const images = Promise.all(
-                body.images.map(async (image) => {
-                    return (await this.uploadService.findOne(image.toString()))._id;
-                }),
-            );
-            updatedData.images = await images;
+        if (body.image) {
+            const images = (await this.uploadService.findOne(body.image.toString()))._id;
+            updatedData.image = images;
         }
 
         const updatedProduct = await this.productModel.findByIdAndUpdate(id, body, { new: true }).exec();

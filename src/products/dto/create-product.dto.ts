@@ -1,8 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsArray, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Types } from 'mongoose';
-import { VariantDto } from './create-variant.dto';
 
 export class CreateProductDto {
     @ApiProperty({ example: 'BROWN BLUE ' })
@@ -25,19 +23,8 @@ export class CreateProductDto {
     @IsMongoId()
     category: Types.ObjectId;
 
-    @ApiProperty({ isArray: true, type: String })
-    @IsArray()
-    @IsMongoId({ each: true })
-    images: string[];
-
-    @ApiProperty({ type: Number, required: true })
+    @ApiProperty({ type: String })
+    @IsMongoId()
     @IsNotEmpty()
-    @IsNumber()
-    stock: number;
-
-    @ApiProperty({ type: VariantDto, isArray: true })
-    @IsOptional()
-    @IsArray()
-    @Type(() => VariantDto)
-    variants: VariantDto[];
+    image: string;
 }

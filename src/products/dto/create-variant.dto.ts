@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
-import { Types } from 'mongoose';
+import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class VariantDto {
     @ApiProperty({ example: 'blue' })
@@ -16,10 +15,5 @@ export class VariantDto {
     @ApiProperty({ example: 4442, required: false, description: 'this field is optional id price is differance from main product price,Price is in cent', default: 0 })
     @IsOptional()
     @IsNumber()
-    price: number;
-
-    @ApiProperty({ type: String, required: false, description: 'this field is optional' })
-    @IsMongoId()
-    @IsOptional()
-    image: Types.ObjectId;
+    price?: number;
 }
