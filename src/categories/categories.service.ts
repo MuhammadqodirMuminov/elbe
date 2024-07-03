@@ -4,6 +4,7 @@ import mongoose, { Model, Types } from 'mongoose';
 import { ProductDocument } from 'src/products/models/product.schema';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { UploadService } from 'src/upload/upload.service';
+import { VariantDocument } from 'src/variants/models/variant.schema';
 import { CategoryRepository } from './category.repository';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -67,7 +68,17 @@ export class CategoriesService {
                 childs.map(async (child) => {
                     const c = JSON.parse(JSON.stringify(child));
 
-                    const products = await this.productModel.find({ category: new Types.ObjectId(child._id) });
+                    const products = await this.productModel.find(
+                        { category: new Types.ObjectId(child._id) },
+                        {},
+                        {
+                            populate: [
+                                { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
+                                { path: 'image', select: { _id: 1, url: 1 } },
+                                { path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', select: { _id: 1, url: 1 }, model: UploadDocuemnt.name }] },
+                            ],
+                        },
+                    );
 
                     return { ...c, products };
                 }),
