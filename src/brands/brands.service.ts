@@ -6,6 +6,7 @@ import { UpdateBrandDto } from './dto/update-brand.dto';
 
 @Injectable()
 export class BrandsService {
+    
     constructor(
         private readonly brandRepository: BrandRepository,
         private readonly uploadService: UploadService,
