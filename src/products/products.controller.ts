@@ -19,6 +19,11 @@ export class ProductsController {
         return this.productsService.findAll(query);
     }
 
+    @Get('best-sellers')
+    async findBestsellers() {
+        return await this.productsService.findBestsellers();
+    }
+
     @Get('detail/:id')
     async detail(@Param('id') id: string) {
         return await this.productsService.detail(id);
