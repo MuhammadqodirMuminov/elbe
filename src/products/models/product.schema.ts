@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
+import { BrandDocument } from 'src/brands/models/brand.schema';
 import { AbstractDocument } from 'src/database/abstract.schema';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { VariantDocument } from 'src/variants/models/variant.schema';
@@ -14,6 +15,9 @@ export class ProductDocument extends AbstractDocument {
 
     @Prop({ required: true })
     price: number;
+
+    @Prop({ type: Types.ObjectId, required: false, ref: BrandDocument.name })
+    brand?: Types.ObjectId;
 
     @Prop({ type: Types.ObjectId, ref: 'CategoryDocument', default: null })
     category: Types.ObjectId;

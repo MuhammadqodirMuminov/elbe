@@ -15,6 +15,7 @@ import { DiscountsModule } from './discounts/discounts.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { AdressesModule } from './adresses/adresses.module';
 import { VariantsModule } from './variants/variants.module';
+import { BrandsModule } from './brands/brands.module';
 
 @Module({
     imports: [
@@ -52,6 +53,7 @@ import { VariantsModule } from './variants/variants.module';
         ReviewsModule,
         AdressesModule,
         VariantsModule,
+        BrandsModule,
     ],
 })
 export class AppModule {}
