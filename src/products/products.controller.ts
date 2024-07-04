@@ -24,6 +24,11 @@ export class ProductsController {
         return await this.productsService.findBestsellers();
     }
 
+    @Get('child-category/:categoryId')
+    async getChildCategory(@Param('categoryId') categoryId: string, @Query() query: QueryProductDto) {
+        return await this.productsService.createChildCategory(categoryId, query);
+    }
+
     @Get('detail/:id')
     async detail(@Param('id') id: string) {
         return await this.productsService.detail(id);
