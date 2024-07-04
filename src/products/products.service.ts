@@ -99,7 +99,13 @@ export class ProductsService {
             const sortedProducts = Array.from(productSales.entries()).sort((a, b) => b[1] - a[1]);
             const bestSellerIds = sortedProducts.slice(0, 4).map((entry) => entry[0]);
 
-            return this.productModel.find({ _id: { $in: bestSellerIds } }).exec();
+            return this.productModel
+                .find({ _id: { $in: bestSellerIds } }, {}, {})
+                .populate([
+                    { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
+                    { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
+                ])
+                .populate([{ path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } }] }]);
         } catch (error) {
             throw new BadRequestException(error?.message);
         }
