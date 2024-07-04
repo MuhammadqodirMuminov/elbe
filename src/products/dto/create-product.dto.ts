@@ -23,6 +23,11 @@ export class CreateProductDto {
     @IsMongoId()
     category: Types.ObjectId;
 
+    @ApiProperty({ type: String, required: false })
+    @IsOptional()
+    @IsMongoId()
+    brand: Types.ObjectId;
+
     @ApiProperty({ type: String })
     @IsMongoId()
     @IsNotEmpty()

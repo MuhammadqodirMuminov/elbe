@@ -1,4 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { BrandsModule } from 'src/brands/brands.module';
 import { CategoriesModule } from 'src/categories/categories.module';
 import { CategoryDocument, CategorySchema } from 'src/categories/models/category.schema';
 import { DatabaseModule } from 'src/database/database.module';
@@ -12,6 +13,7 @@ import { ProductsService } from './products.service';
 
 @Module({
     imports: [
+        BrandsModule,
         OrdersModule,
         UploadModule,
         CategoriesModule,
