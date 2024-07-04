@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CategoryRepository } from 'src/categories/category.repository';
 import { CategoryDocument } from 'src/categories/models/category.schema';
+import { OrdersService } from 'src/orders/orders.service';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { UploadService } from 'src/upload/upload.service';
 import { VariantDocument } from 'src/variants/models/variant.schema';
@@ -22,6 +23,7 @@ export class ProductsService {
         @InjectModel(CategoryDocument.name) private categoryModel: Model<CategoryDocument>,
         private readonly uploadService: UploadService,
         @Inject(forwardRef(() => VariantsService)) private readonly variantService: VariantsService,
+        private readonly orderService: OrdersService,
     ) {}
 
     async create(body: CreateProductDto): Promise<ProductDocument> {
@@ -71,6 +73,36 @@ export class ProductsService {
         }
 
         return product;
+    }
+
+    async findBestsellers() {
+        try {
+            const productSales = new Map<string, number>();
+
+            const orders = await this.orderService.findAll();
+
+            if (orders.length === 0) {
+                orders?.forEach(async (order) => {
+                    order.products.forEach((p) => {
+                        const count = productSales.get(p?.productId?.toString()) || 0;
+                        productSales.set(p.productId.toString(), count + 1);
+                    });
+                });
+            } else {
+                const products = await this.productModel.find();
+                products.slice(0, 100).forEach((p) => {
+                    const count = productSales.get(p?._id?.toString()) || 0;
+                    productSales.set(p._id.toString(), count + 1);
+                });
+            }
+
+            const sortedProducts = Array.from(productSales.entries()).sort((a, b) => b[1] - a[1]);
+            const bestSellerIds = sortedProducts.slice(0, 4).map((entry) => entry[0]);
+
+            return this.productModel.find({ _id: { $in: bestSellerIds } }).exec();
+        } catch (error) {
+            throw new BadRequestException(error?.message);
+        }
     }
 
     async getOne(id: string): Promise<ProductDocument> {
