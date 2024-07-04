@@ -4,6 +4,8 @@ import { Model, Types } from 'mongoose';
 import { BrandsService } from 'src/brands/brands.service';
 import { CategoryRepository } from 'src/categories/category.repository';
 import { CategoryDocument } from 'src/categories/models/category.schema';
+import { CollectionsService } from 'src/collections/collections.service';
+import { CollectionType } from 'src/common';
 import { OrdersService } from 'src/orders/orders.service';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { UploadService } from 'src/upload/upload.service';
@@ -26,6 +28,7 @@ export class ProductsService {
         @Inject(forwardRef(() => VariantsService)) private readonly variantService: VariantsService,
         private readonly orderService: OrdersService,
         private readonly brandService: BrandsService,
+        private readonly collectionService: CollectionsService,
     ) {}
 
     async create(body: CreateProductDto): Promise<ProductDocument> {
@@ -90,6 +93,47 @@ export class ProductsService {
             .exec();
 
         const total = await this.productModel.countDocuments({ category: category._id }).exec();
+
+        return { data: products, total, page: +page, limit: +limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
+    }
+
+    async getByCollection(collectionId: string, query: QueryProductDto) {
+        let total: number;
+        let products: ProductDocument[];
+        const { page = 1, limit = 10, search = '' } = query;
+
+        const collection = await this.collectionService.findOne(collectionId);
+
+        if (collection.type === CollectionType.BRAND) {
+            products = await this.productModel
+                .find({ brand: new Types.ObjectId(collection.brand) })
+                .find()
+                .skip((+page - 1) * +limit)
+                .limit(Number(limit))
+                .populate([
+                    { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
+                    { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
+                    { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
+                ])
+                .populate([{ path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } }] }])
+                .exec();
+
+            total = await this.productModel.countDocuments({ brand: new Types.ObjectId(collection.brand) }).exec();
+        } else if (collection.type === CollectionType.CATEGORY) {
+            products = await this.productModel
+                .find({ category: new Types.ObjectId(collection.category) })
+                .find()
+                .skip((+page - 1) * +limit)
+                .limit(Number(limit))
+                .populate([
+                    { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
+                    { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
+                    { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
+                ])
+                .populate([{ path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } }] }])
+                .exec();
+            total = await this.productModel.countDocuments({ category: new Types.ObjectId(collection.category) }).exec();
+        }
 
         return { data: products, total, page: +page, limit: +limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
     }

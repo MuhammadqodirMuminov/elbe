@@ -29,6 +29,11 @@ export class ProductsController {
         return await this.productsService.createChildCategory(categoryId, query);
     }
 
+    @Get('get-by-collection/:collectionId')
+    async getByCollection(@Param('collectionId') collectionId: string, @Query() query: QueryProductDto) {
+        return await this.productsService.getByCollection(collectionId, query);
+    }
+
     @Get('detail/:id')
     async detail(@Param('id') id: string) {
         return await this.productsService.detail(id);

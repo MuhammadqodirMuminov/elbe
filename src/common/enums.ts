@@ -21,3 +21,8 @@ export enum PayOptions {
     SUCCEEDED = 'SUCCEEDED',
     FAILED = 'FAILED',
 }
+
+export enum CollectionType {
+    BRAND = 'BRAND',
+    CATEGORY = 'CATEGORY',
+}
