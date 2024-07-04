@@ -75,6 +75,7 @@ export class CategoriesService {
                             populate: [
                                 { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
                                 { path: 'image', select: { _id: 1, url: 1 } },
+                                { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
                                 { path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', select: { _id: 1, url: 1 }, model: UploadDocuemnt.name }] },
                             ],
                         },
@@ -89,7 +90,24 @@ export class CategoriesService {
     }
 
     async findAll() {
-        const categories = await this.categoryModel.find({}, {}, { populate: [{ path: 'products', model: ProductDocument.name, populate: [{ path: 'image', model: UploadDocuemnt.name }] }, { path: 'image' }, { path: 'parent_id', model: CategoryDocument.name, select: { products: 0 } }] });
+        const categories = await this.categoryModel.find(
+            {},
+            {},
+            {
+                populate: [
+                    {
+                        path: 'products',
+                        model: ProductDocument.name,
+                        populate: [
+                            { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
+                            { path: 'image', model: UploadDocuemnt.name },
+                        ],
+                    },
+                    { path: 'image' },
+                    { path: 'parent_id', model: CategoryDocument.name, select: { products: 0 } },
+                ],
+            },
+        );
 
         return categories;
     }

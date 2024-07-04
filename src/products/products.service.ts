@@ -1,6 +1,7 @@
 import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { BrandsService } from 'src/brands/brands.service';
 import { CategoryRepository } from 'src/categories/category.repository';
 import { CategoryDocument } from 'src/categories/models/category.schema';
 import { OrdersService } from 'src/orders/orders.service';
@@ -24,17 +25,21 @@ export class ProductsService {
         private readonly uploadService: UploadService,
         @Inject(forwardRef(() => VariantsService)) private readonly variantService: VariantsService,
         private readonly orderService: OrdersService,
+        private readonly brandService: BrandsService,
     ) {}
 
     async create(body: CreateProductDto): Promise<ProductDocument> {
         try {
             await this.categoryRepository.findOne({ _id: body.category });
 
+            await this.brandService.findOne(body.brand.toString());
+
             const images = (await this.uploadService.findOne(body.image.toString()))._id;
 
             const createdProduct = await this.productRepository.create({
                 ...body,
                 category: new Types.ObjectId(body.category),
+                brand: new Types.ObjectId(body.brand),
                 image: images,
                 variants: [],
             });
@@ -45,7 +50,7 @@ export class ProductsService {
         }
     }
 
-    async findAll(query: QueryProductDto): Promise<{ data: ProductDocument[]; total: number }> {
+    async findAll(query: QueryProductDto) {
         const { page = 1, limit = 10, search = '' } = query;
         const filter = search ? { $or: [{ name: new RegExp(search, 'i') }, { description: new RegExp(search, 'i') }] } : {};
 
@@ -56,6 +61,7 @@ export class ProductsService {
                 .limit(Number(limit))
                 .populate([
                     { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
+                    { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
                     { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
                 ])
                 .populate([{ path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } }] }])
@@ -63,7 +69,29 @@ export class ProductsService {
             await this.productModel.countDocuments(filter).exec(),
         ]);
 
-        return { data: data, total };
+        return { data: data, total, page, limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
+    }
+
+    async createChildCategory(categoryId: string, query: QueryProductDto) {
+        const { page = 1, limit = 10, search = '' } = query;
+        const category = await this.categoryModel.findOne({ _id: categoryId, parent_id: { $ne: null } });
+        if (!category) throw new BadRequestException('please select a child categpry');
+
+        const products = await this.productModel
+            .find({ category: category._id, $or: [{ name: new RegExp(search, 'i') }, { description: new RegExp(search, 'i') }] })
+            .skip((+page - 1) * +limit)
+            .limit(Number(limit))
+            .populate([
+                { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
+                { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
+                { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
+            ])
+            .populate([{ path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } }] }])
+            .exec();
+
+        const total = await this.productModel.countDocuments({ category: category._id }).exec();
+
+        return { data: products, total, page: +page, limit: +limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
     }
 
     async findOne(id: string): Promise<any> {
@@ -103,6 +131,7 @@ export class ProductsService {
                 .find({ _id: { $in: bestSellerIds } }, {}, {})
                 .populate([
                     { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
+                    { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
                     { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
                 ])
                 .populate([{ path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } }] }]);
@@ -129,6 +158,7 @@ export class ProductsService {
                     populate: [
                         { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
                         { path: 'image', select: { _id: 1, url: 1 } },
+                        { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
                         { path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', select: { _id: 1, url: 1 }, model: UploadDocuemnt.name }] },
                     ],
                 },
@@ -141,6 +171,7 @@ export class ProductsService {
         const recomended = await this.productModel.find({ category: product.category._id }).populate([
             { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
             { path: 'image', select: { _id: 1, url: 1 } },
+            { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
             { path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', select: { _id: 1, url: 1 }, model: UploadDocuemnt.name }] },
         ]);
 
@@ -155,6 +186,11 @@ export class ProductsService {
         if (body.category) {
             const category = await this.categoryRepository.findOne({ _id: body.category });
             updatedData.category = category._id;
+        }
+
+        if (body.brand) {
+            const brand = await this.brandService.findOne(body.brand.toString());
+            updatedData.brand = brand._id;
         }
 
         if (body.image) {
