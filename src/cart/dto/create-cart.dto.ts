@@ -32,7 +32,7 @@ export class UpdateCartDto {
     @ApiProperty()
     @IsMongoId()
     @IsNotEmpty()
-    productId: string;
+    variantId: string;
 
     @IsNotEmpty()
     @ApiProperty()
