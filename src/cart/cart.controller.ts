@@ -6,7 +6,6 @@ import JwtAuthGuard from 'src/auth/guards/jwt-auth.guard';
 import { UserDocument } from 'src/auth/users/models/user.schema';
 import { CartService } from './cart.service';
 import { UpdateCartDto } from './dto/create-cart.dto';
-import { CartDocument } from './models/cart.schema';
 
 @ApiTags('cart')
 @ApiBearerAuth()
@@ -16,7 +15,7 @@ export class CartController {
     constructor(private readonly cartService: CartService) {}
 
     @Get()
-    async create(@CurrentUser() user: UserDocument): Promise<CartDocument> {
+    async create(@CurrentUser() user: UserDocument) {
         return this.cartService.getOrcreate(user);
     }
 
