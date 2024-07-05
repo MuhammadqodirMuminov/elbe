@@ -51,6 +51,9 @@ export class CollectionsService {
                     {
                         path: 'category',
                     },
+                    {
+                        path: 'image',
+                    },
                 ],
             },
         );
@@ -68,6 +71,9 @@ export class CollectionsService {
                     },
                     {
                         path: 'category',
+                    },
+                    {
+                        path: 'image',
                     },
                 ],
             },
