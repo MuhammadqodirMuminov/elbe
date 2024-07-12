@@ -1,88 +1,31 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { OrderStatus, PaymentMethods, PaymentStatus } from 'src/common';
-import { Discount } from 'src/discounts/models/discount.schema';
+import { AdressDocument } from 'src/adresses/models/adress.schema';
+import { CartDocument } from 'src/cart/models/cart.schema';
+import { OrderStatus } from 'src/common';
+import { PaymentDocuemnt } from 'src/payment/models/payment.schema';
 
 export type OrderDocument = Order & Document;
 
 @Schema({ versionKey: false, timestamps: true })
 export class Order {
     @Prop({ type: Types.ObjectId, ref: 'UserDocument', required: true })
-    user: Types.ObjectId;
+    user_id: Types.ObjectId;
 
-    @Prop({
-        type: [
-            {
-                productId: { type: Types.ObjectId, ref: 'ProductDocument', required: true },
-                quantity: { type: Number, required: true },
-                price: { type: Number, required: true },
-                color: { type: String, required: false },
-                size: { type: String, required: false },
-            },
-        ],
-        required: true,
-    })
-    products: {
-        productId: Types.ObjectId;
-        quantity: number;
-        price: number;
-        color?: string;
-        size?: string;
-    }[];
+    @Prop({ type: Types.ObjectId, ref: CartDocument.name, required: true })
+    cart_id: Types.ObjectId;
 
-    @Prop({ required: true })
-    totalPrice: number;
+    @Prop({ type: Types.ObjectId, ref: AdressDocument.name, required: true })
+    address_id: Types.ObjectId;
 
-    @Prop({
-        type: {
-            street: { type: String, required: false },
-            city: { type: String, required: false },
-            state: { type: String, required: false },
-            zip: { type: String, required: false },
-            country: { type: String, required: false },
-        },
-        required: false,
-    })
-    shippingAddress?: {
-        street?: string;
-        city?: string;
-        state?: string;
-        zip?: string;
-        country?: string;
-    };
+    @Prop({ type: [Types.ObjectId], ref: PaymentDocuemnt.name, required: false })
+    payments?: Types.Array<Types.ObjectId>;
 
-    @Prop({
-        type: {
-            street: { type: String, required: false },
-            city: { type: String, required: false },
-            state: { type: String, required: false },
-            zip: { type: String, required: false },
-            country: { type: String, required: false },
-        },
-        required: false,
-    })
-    billingAddress?: {
-        street?: string;
-        city?: string;
-        state?: string;
-        zip?: string;
-        country?: string;
-    };
-    //
-    @Prop({ type: String, enum: PaymentMethods, default: PaymentMethods.STRIPE, required: true })
-    paymentMethod: PaymentMethods;
+    @Prop({ type: Types.ObjectId, ref: PaymentDocuemnt.name, required: false })
+    success_payment_id?: Types.ObjectId;
 
-    @Prop({ type: String, enum: PaymentStatus, default: PaymentStatus.PENDING, required: true })
-    paymentStatus: PaymentStatus;
-
-    @Prop({ type: String, enum: OrderStatus, default: OrderStatus.PLACED, required: true })
-    shippingStatus: OrderStatus;
-
-    @Prop({ type: [{ type: Types.ObjectId, ref: Discount.name }], required: false })
-    appliedDiscounts?: Types.ObjectId[];
-
-    // @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'DeliveryOption', required: false })
-    // deliveryOption?: MongooseSchema.Types.ObjectId;
+    @Prop({ type: String, enum: OrderStatus, default: OrderStatus.CREATED, required: true })
+    orderStatus: OrderStatus;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);

@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { UserDocument } from 'src/auth/users/models/user.schema';
 import { ProductDocument } from 'src/products/models/product.schema';
+import { ProductsService } from 'src/products/products.service';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { VariantDocument } from 'src/variants/models/variant.schema';
 import { VariantsService } from 'src/variants/variants.service';
@@ -18,6 +19,7 @@ export class CartService {
         @InjectModel(CartItemsDocument.name) private cartItemModel: Model<CartItemsDocument>,
         private readonly cartRepository: CartRepository,
         private readonly variantService: VariantsService,
+        private readonly productService: ProductsService,
     ) {}
 
     async getOrcreate(user: UserDocument): Promise<CartDocument> {
@@ -130,5 +132,38 @@ export class CartService {
 
     async findAll(): Promise<CartDocument[]> {
         return this.cartModel.find().populate('user', '-password').populate('items.productId', {}, ProductDocument.name).exec();
+    }
+
+    async getRecomended(user: UserDocument) {
+        const userCart: any = await this.cartModel.findOne(
+            { user: user._id },
+            {},
+            {
+                populate: [
+                    {
+                        path: 'items',
+                        model: CartItemsDocument.name,
+                        populate: {
+                            path: 'variant_id',
+                            model: VariantDocument.name,
+                            populate: [
+                                {
+                                    path: 'productId',
+                                    model: ProductDocument.name,
+                                    select: { variants: 0 },
+                                },
+                            ],
+                        },
+                    },
+                ],
+            },
+        );
+
+        if (userCart.items.length === 0) {
+            return { message: 'No recomended producs found' };
+        }
+        let category = await this.productService.getAllWithQuery({ category: new Types.ObjectId(userCart.items[0].variant_id.productId.category) });
+
+        return category.slice(0, 4);
     }
 }

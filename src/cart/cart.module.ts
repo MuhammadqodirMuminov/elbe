@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from 'src/database/database.module';
+import { ProductsModule } from 'src/products/products.module';
 import { VariantsModule } from 'src/variants/variants.module';
 import { CartController } from './cart.controller';
 import { CartRepository } from './cart.repository';
@@ -9,6 +10,7 @@ import { CartDocument, CartSchema } from './models/cart.schema';
 
 @Module({
     imports: [
+        ProductsModule,
         VariantsModule,
         DatabaseModule,
         DatabaseModule.forFeature([

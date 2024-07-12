@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 import { BrandsService } from 'src/brands/brands.service';
 import { CategoryRepository } from 'src/categories/category.repository';
 import { CategoryDocument } from 'src/categories/models/category.schema';
@@ -154,8 +154,8 @@ export class ProductsService {
             const orders = await this.orderService.findAll();
 
             if (orders.length === 0) {
-                orders?.forEach(async (order) => {
-                    order.products.forEach((p) => {
+                orders?.forEach(async (order :any) => {
+                    order?.products?.forEach((p) => {
                         const count = productSales.get(p?.productId?.toString()) || 0;
                         productSales.set(p.productId.toString(), count + 1);
                     });
@@ -191,6 +191,10 @@ export class ProductsService {
         }
 
         return product;
+    }
+
+    async getAllWithQuery(filterQuery: FilterQuery<ProductDocument>) {
+        return await this.productModel.find(filterQuery).exec();
     }
 
     async detail(id: string) {

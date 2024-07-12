@@ -19,6 +19,11 @@ export class CartController {
         return this.cartService.getOrcreate(user);
     }
 
+    @Get('get-recomended')
+    async getRecomended(@CurrentUser() user: UserDocument, ) {
+        return this.cartService.getRecomended(user);
+    }
+
     @Post('upsert-item')
     async updateActiveCart(
         @Body() itemUpdateDto: UpdateCartDto,
