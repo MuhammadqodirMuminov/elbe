@@ -1,27 +1,28 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { PayOptions, PaymentMethods } from 'src/common';
-import { Order } from 'src/orders/models/order.schema';
+import { UserDocument } from 'src/auth/users/models/user.schema';
+import { PaymentMethods, PaymentStatus } from 'src/common';
+import { Discount } from 'src/discounts/models/discount.schema';
 
 @Schema({ versionKey: false, timestamps: true })
 export class PaymentDocuemnt extends Document {
-    @Prop({ type: Types.ObjectId, ref: Order.name, required: true })
-    order: Types.ObjectId;
+    @Prop({ type: Types.ObjectId, ref: UserDocument.name, required: true })
+    user_id: Types.ObjectId;
+
+    @Prop({ type: Types.ObjectId, ref: 'Order', required: true })
+    order_id: Types.ObjectId;
+
+    @Prop({ type: String, required: false })
+    transaction_id?: string;
 
     @Prop({ type: String, enum: PaymentMethods, required: true })
     paymentGateway: PaymentMethods;
 
-    @Prop({ unique: true, required: true })
-    transactionId: string;
+    @Prop({ type: String, enum: PaymentStatus, default: PaymentStatus.PENDING, required: true })
+    paymentStatus: PaymentStatus;
 
-    @Prop({ required: true })
-    amount: number;
-
-    @Prop({ required: true })
-    paymentDate: Date;
-
-    @Prop({ type: String, enum: PayOptions, required: true })
-    status: PayOptions;
+    @Prop({ type: [{ type: Types.ObjectId, ref: Discount.name }], required: false })
+    appliedDiscounts?: Types.ObjectId[];
 
     @Prop({ type: Object })
     details?: Record<string, any>;

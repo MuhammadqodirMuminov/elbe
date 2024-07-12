@@ -7,14 +7,15 @@ export enum PaymentMethods {
 
 export enum PaymentStatus {
     PENDING = 'PENDING',
-    PAID = 'PAID',
+    DONE = 'DONE',
     FAILED = 'FAILED',
+    CANCELED = 'CANCELED',
 }
 
 export enum OrderStatus {
-    PLACED = 'PLACED',
-    SHIPPED = 'SHIPPED',
-    DELIVERED = 'DELIVERED',
+    CREATED = 'CREATED',
+    SUCCEEDED = 'SUCCEEDED',
+    CANCELED = 'CANCELED',
 }
 
 export enum PayOptions {

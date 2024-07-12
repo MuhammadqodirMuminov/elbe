@@ -106,7 +106,7 @@ export class CreateOrderDto {
 import { OrderStatus, PaymentStatus } from 'src/common';
 
 export class UpdateOrderStatusDto {
-    @ApiProperty({ type: 'enum', enum: OrderStatus, example: OrderStatus.PLACED })
+    @ApiProperty({ type: 'enum', enum: OrderStatus, example: OrderStatus.CANCELED })
     @IsEnum(OrderStatus)
     @IsNotEmpty()
     shippingStatus: OrderStatus;

@@ -154,8 +154,8 @@ export class ProductsService {
             const orders = await this.orderService.findAll();
 
             if (orders.length === 0) {
-                orders?.forEach(async (order) => {
-                    order.products.forEach((p) => {
+                orders?.forEach(async (order :any) => {
+                    order?.products?.forEach((p) => {
                         const count = productSales.get(p?.productId?.toString()) || 0;
                         productSales.set(p.productId.toString(), count + 1);
                     });
