@@ -1,6 +1,8 @@
 
 cd ./elbe
 
+ls
+
 git pull origin main
 
 docker-compose down
