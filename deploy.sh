@@ -1,5 +1,5 @@
 
-cd /elbe
+cd ./elbe
 
 git pull origin main
 
