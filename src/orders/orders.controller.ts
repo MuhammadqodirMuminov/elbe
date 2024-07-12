@@ -9,9 +9,6 @@ import { OrdersService } from './orders.service';
 export class OrdersController {
     constructor(private readonly orderService: OrdersService) {}
 
-    //orders
-    
-
     // @Post()
     // async createOrder(@Body() createOrderDto: CreateOrderDto): Promise<Order> {
     //     return this.orderService.createOrder(createOrderDto);
