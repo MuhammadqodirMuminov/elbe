@@ -1,6 +1,3 @@
-
-cd ./elbe
-
 ls
 
 git pull origin main
