@@ -17,7 +17,7 @@ import { AdressesModule } from './adresses/adresses.module';
 import { VariantsModule } from './variants/variants.module';
 import { BrandsModule } from './brands/brands.module';
 import { CollectionsModule } from './collections/collections.module';
-
+//update
 @Module({
     imports: [
         PinoLoggerModule.forRoot({
