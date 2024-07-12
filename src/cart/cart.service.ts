@@ -46,6 +46,18 @@ export class CartService {
                                         model: UploadDocuemnt.name,
                                         select: { _id: 1, url: 1 },
                                     },
+                                    {
+                                        path: 'productId',
+                                        model: ProductDocument.name,
+                                        select: { _id: 1, name: 1, image: 1, description: 1 },
+                                        populate: [
+                                            {
+                                                path: 'image',
+                                                model: UploadDocuemnt.name,
+                                                select: { _id: 1, url: 1 },
+                                            },
+                                        ],
+                                    },
                                 ],
                             },
                         ],
@@ -162,7 +174,17 @@ export class CartService {
         if (userCart.items.length === 0) {
             return { message: 'No recomended producs found' };
         }
-        let category = await this.productService.getAllWithQuery({ category: new Types.ObjectId(userCart.items[0].variant_id.productId.category) });
+        let category = await this.productService.getAllWithQuery(
+            { category: new Types.ObjectId(userCart.items[0].variant_id.productId.category) },
+            {
+                populate: [
+                    { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
+                    { path: 'image', select: { _id: 1, url: 1 } },
+                    { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
+                    { path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', select: { _id: 1, url: 1 }, model: UploadDocuemnt.name }] },
+                ],
+            },
+        );
 
         return category.slice(0, 4);
     }

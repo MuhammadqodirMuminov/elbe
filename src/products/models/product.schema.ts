@@ -16,6 +16,9 @@ export class ProductDocument extends AbstractDocument {
     @Prop({ required: true })
     price: number;
 
+    @Prop({ type: Number, required: false, default: 0 })
+    sold_amount: number;
+
     @Prop({ type: Types.ObjectId, required: false, ref: BrandDocument.name })
     brand?: Types.ObjectId;
 
