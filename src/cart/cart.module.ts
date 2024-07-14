@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { DatabaseModule } from 'src/database/database.module';
 import { ProductsModule } from 'src/products/products.module';
 import { VariantsModule } from 'src/variants/variants.module';
@@ -10,7 +10,7 @@ import { CartDocument, CartSchema } from './models/cart.schema';
 
 @Module({
     imports: [
-        ProductsModule,
+        forwardRef(() => ProductsModule),
         VariantsModule,
         DatabaseModule,
         DatabaseModule.forFeature([
@@ -20,6 +20,6 @@ import { CartDocument, CartSchema } from './models/cart.schema';
     ],
     controllers: [CartController],
     providers: [CartService, CartRepository],
-    exports: [CartService, CartRepository],
+    exports: [CartService],
 })
 export class CartModule {}

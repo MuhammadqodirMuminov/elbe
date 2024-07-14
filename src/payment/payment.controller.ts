@@ -1,33 +1,27 @@
 // src/payment/payment.controller.ts
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from 'src/auth/current-user.decorator';
+import JwtAuthGuard from 'src/auth/guards/jwt-auth.guard';
+import { UserDocument } from 'src/auth/users/models/user.schema';
+import { QueryProductDto } from 'src/products/dto/query.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
-import { PaymentDocuemnt } from './models/payment.schema';
 import { PaymentService } from './payment.service';
 
 @ApiTags('payments')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('payments')
 export class PaymentController {
     constructor(private readonly paymentService: PaymentService) {}
 
     @Post()
-    async create(@Body() createPaymentDto: CreatePaymentDto): Promise<PaymentDocuemnt> {
-        return this.paymentService.create(createPaymentDto);
+    async create(@Body() createPaymentDto: CreatePaymentDto, @CurrentUser() user: UserDocument) {
+        return this.paymentService.create(createPaymentDto, user);
     }
 
     @Get()
-    async findAll(): Promise<PaymentDocuemnt[]> {
-        return this.paymentService.findAll();
-    }
-
-    @Get(':id')
-    async findOne(@Param('id') id: string): Promise<PaymentDocuemnt> {
-        return this.paymentService.findOne(id);
-    }
-
-    @Put(':id')
-    async update(@Param('id') id: string, @Body() updatePaymentDto: UpdatePaymentDto): Promise<PaymentDocuemnt> {
-        return this.paymentService.update(id, updatePaymentDto);
+    async getAll(@Query() query: QueryProductDto, @CurrentUser() user: UserDocument) {
+        return this.paymentService.getAll(query, user);
     }
 }

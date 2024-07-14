@@ -1,4 +1,4 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { UserDocument } from 'src/auth/users/models/user.schema';
@@ -19,7 +19,7 @@ export class CartService {
         @InjectModel(CartItemsDocument.name) private cartItemModel: Model<CartItemsDocument>,
         private readonly cartRepository: CartRepository,
         private readonly variantService: VariantsService,
-        private readonly productService: ProductsService,
+        @Inject(forwardRef(() => ProductsService)) private readonly productService: ProductsService,
     ) {}
 
     async getOrcreate(user: UserDocument): Promise<CartDocument> {
@@ -187,5 +187,9 @@ export class CartService {
         );
 
         return category.slice(0, 4);
+    }
+
+    async update(_id: string, data: Record<string, any>) {
+        return await this.cartModel.updateOne({ _id }, data);
     }
 }

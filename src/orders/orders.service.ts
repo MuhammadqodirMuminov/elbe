@@ -1,41 +1,98 @@
-// src/order/order.service.ts
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
+import { AdressDocument } from 'src/adresses/models/adress.schema';
+import { UserDocument } from 'src/auth/users/models/user.schema';
 import { UsersRepository } from 'src/auth/users/users.repository';
-import { Order, OrderDocument } from './models/order.schema';
+import { CartService } from 'src/cart/cart.service';
+import { CartItemsDocument } from 'src/cart/models/car-item.schema';
+import { CartDocument } from 'src/cart/models/cart.schema';
+import { OrderStatus } from 'src/common';
+import { PaymentDocuemnt } from 'src/payment/models/payment.schema';
+import { QueryProductDto } from 'src/products/dto/query.dto';
+import { OrderDocument } from './models/order.schema';
 
 @Injectable()
 export class OrdersService {
     constructor(
-        @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
+        @InjectModel(OrderDocument.name) private readonly orderModel: Model<OrderDocument>,
+        @InjectModel(CartItemsDocument.name) private readonly cartItemModel: Model<CartItemsDocument>,
         private readonly usersRepository: UsersRepository,
+        private readonly cartService: CartService,
     ) {}
 
-    // async createOrder(createOrderDto: CreateOrderDto): Promise<Order> {
-    //     await this.usersRepository.findOne({ _id: createOrderDto.user });
+    async upsert(user: UserDocument, address: AdressDocument, cart: CartDocument) {
+        if (!cart?.items?.length) {
+            throw new ForbiddenException({
+                cart: 'Cart should contain atleast 1 item.',
+            });
+        }
+        let order = await this.orderModel.findOne({
+            cart_id: cart._id,
+        });
 
-    //     const createdOrder = new this.orderModel(createOrderDto);
-    //     return createdOrder.save();
-    // }
+        if (!order) {
+            order = await this.orderModel.create({
+                _id: new Types.ObjectId(),
+                cart_id: new Types.ObjectId(cart._id),
+                user_id: new Types.ObjectId(user._id),
+                address_id: new Types.ObjectId(address._id),
+            });
+        }
+        if (order.address_id !== address._id) {
+            order.address_id = address._id;
+            await order.save();
+        }
 
-    async findAll(): Promise<Order[]> {
+        return order;
+    }
+
+    async getAll(query: QueryProductDto, user: UserDocument) {
+        try {
+            const { page = 1, limit = 10, search = '' } = query;
+            const orders = await this.orderModel
+                .find({ user_id: new Types.ObjectId(user._id), $or: [{ name: new RegExp(search, 'i') }, { description: new RegExp(search, 'i') }] })
+                .skip((+page - 1) * +limit)
+                .limit(Number(limit));
+
+            const total = await this.orderModel.countDocuments({ category: user._id }).exec();
+
+            return { data: orders, total, page: +page, limit: +limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
+        } catch (error) {
+            throw new BadRequestException(error?.message);
+        }
+    }
+
+    async findAll(): Promise<OrderDocument[]> {
         return this.orderModel.find().exec();
     }
 
-    // async findById(id: string): Promise<Order> {
-    //     return this.orderModel.findById(id).populate('user', '-password').populate('products.productId').exec();
-    // }
+    async getOrderById(id: string) {
+        const order = await this.orderModel.findOne({ _id: id });
 
-    // async updateOrderStatus(id: string, updateOrderStatusDto: UpdateOrderStatusDto): Promise<Order> {
-    //     const existingOrder = await this.orderModel.findById(id).exec();
-    //     if (!existingOrder) {
-    //         throw new NotFoundException(`Order #${id} not found`);
-    //     }
+        if (!order) throw new NotFoundException(`Order ${id} not found`);
+        return order;
+    }
 
-    //     existingOrder.shippingStatus = updateOrderStatusDto.shippingStatus;
-    //     existingOrder.paymentStatus = updateOrderStatusDto.paymentStatus;
+    async afterPaymentConcluded(order: OrderDocument, status: OrderStatus, payment: PaymentDocuemnt) {
+        const user = await this.usersRepository.findOne({ _id: order.user_id });
 
-    //     return existingOrder.save();
-    // }
+        const cart = await this.cartService.getOrcreate(user);
+
+        // freeze all the cart items with price
+        cart?.items?.forEach(async (item) => {
+            await this.cartItemModel.updateOne({ _id: item._id, price: item.price });
+        });
+
+        await this.cartService.update(cart._id.toString(), { is_order_created: true });
+
+        return await this.orderModel.updateOne(
+            { _id: order._id },
+            {
+                orderStatus: status,
+                success_payment_id: payment.transaction_id,
+                static_address: order.static_address,
+            },
+        );
+    }
 }

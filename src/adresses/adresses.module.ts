@@ -9,5 +9,6 @@ import { AdressDocument, AdressSchema } from './models/adress.schema';
     imports: [UsersModule, DatabaseModule, DatabaseModule.forFeature([{ name: AdressDocument.name, schema: AdressSchema }])],
     controllers: [AdressesController],
     providers: [AdressesService],
+    exports: [AdressesService],
 })
 export class AdressesModule {}

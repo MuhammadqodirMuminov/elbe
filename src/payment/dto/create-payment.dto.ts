@@ -1,32 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsDate, IsMongoId, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsMongoId, IsNotEmpty } from 'class-validator';
 import { PaymentMethods } from 'src/common';
 
 export class CreatePaymentDto {
     @ApiProperty()
-    @IsNotEmpty()
     @IsMongoId()
-    order: string;
+    @IsNotEmpty()
+    address_id: string;
 
     @ApiProperty({ type: 'enum', enum: PaymentMethods, example: PaymentMethods.STRIPE })
+    @IsEnum(PaymentMethods)
     @IsNotEmpty()
-    @IsString()
-    paymentGateway: PaymentMethods;
-
-    @ApiProperty()
-    @IsNotEmpty()
-    @IsNumber()
-    amount: number;
-
-    @ApiProperty()
-    @IsNotEmpty()
-    @IsDate()
-    @Type(() => Date)
-    paymentDate: Date;
-
-    @ApiProperty({ type: Object })
-    @IsOptional()
-    @IsObject()
-    details?: Record<string, any>;
+    payment_gateway: PaymentMethods;
 }
