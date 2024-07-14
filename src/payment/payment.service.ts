@@ -40,25 +40,28 @@ export class PaymentService {
     async create(createPaymentDto: CreatePaymentDto, user: UserDocument) {
         try {
             const cart = await this.cartService.getOrcreate(user);
+
             const address = await this.addressService.findOne(createPaymentDto.address_id);
 
+            // create an order or get existing order
             const order = await this.orderService.upsert(user, address, cart);
 
+            // find previous payment intent and cancel it
             const payment = await this.paymentModel.findOne({
                 order_id: order._id,
                 status: PaymentStatus.PENDING,
             });
-
             if (payment) {
                 await this.stripeService.cancelIntent(payment.transaction_id);
                 await this.paymentModel.updateOne({ _id: payment._id }, { paymentStatus: PaymentStatus.CANCELED });
             }
 
-            const productPrice = 10;
+            // calculate price  of cart
+            const amount = cart.items.reduce((total, item: any) => {
+                return total + (Number(item.variant_id.productId.price) + Number(item.variant_id.price)) * item.quantity;
+            }, 0);
 
-            const amount = cart.items.reduce((total, item) => total + productPrice, 0);
-
-            const intent = await this.stripeService.createPaymentIntent(amount * 100);
+            const intent = await this.stripeService.createPaymentIntent(amount);
 
             const newPayment = await this.paymentModel.create({
                 _id: new Types.ObjectId(),
@@ -75,8 +78,6 @@ export class PaymentService {
                 payment: newPayment,
             };
         } catch (error) {
-            console.log(error);
-
             throw new HttpException(error?.message, error?.status || 500);
         }
     }

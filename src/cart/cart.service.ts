@@ -24,7 +24,7 @@ export class CartService {
 
     async getOrcreate(user: UserDocument): Promise<CartDocument> {
         const existCart = await this.cartModel.findOne(
-            { user: user._id, is_order_created: false },
+            { user: new Types.ObjectId(user._id), is_order_created: false },
             {},
             {
                 populate: [
@@ -66,7 +66,7 @@ export class CartService {
             },
         );
         if (!existCart) {
-            return (await this.cartModel.create({ user: user._id, is_order_created: false, _id: new Types.ObjectId() })).populate([
+            return (await this.cartModel.create({ user: new Types.ObjectId(user._id), is_order_created: false, _id: new Types.ObjectId() })).populate([
                 {
                     path: 'user',
                     select: { _id: 1, firstname: 1, lastname: 1, email: 1 },
@@ -133,7 +133,6 @@ export class CartService {
 
     async removeItem(cartItemId: string, user: UserDocument) {
         const cartItem: any = await this.cartItemModel.findOne({ _id: cartItemId }, {}, { populate: [{ path: 'cart_id', model: CartDocument.name, populate: [{ path: 'user' }] }] });
-        console.log(cartItem.cart_id.user._id);
 
         if (cartItem.cart_id.user._id.toString() !== user._id.toString()) {
             throw new NotFoundException('cart item not found.');
@@ -191,5 +190,52 @@ export class CartService {
 
     async update(_id: string, data: Record<string, any>) {
         return await this.cartModel.updateOne({ _id }, data);
+    }
+
+    async findOne(user: UserDocument) {
+        const existCart = await this.cartModel.findOne(
+            { user: new Types.ObjectId(user._id), is_order_created: true },
+            {},
+            {
+                populate: [
+                    {
+                        path: 'user',
+                        select: { _id: 1, firstname: 1, lastname: 1, email: 1 },
+                    },
+                    {
+                        path: 'items',
+                        model: CartItemsDocument.name,
+                        select: { cart_id: 0 },
+                        populate: [
+                            {
+                                path: 'variant_id',
+                                model: VariantDocument.name,
+                                populate: [
+                                    {
+                                        path: 'images',
+                                        model: UploadDocuemnt.name,
+                                        select: { _id: 1, url: 1 },
+                                    },
+                                    {
+                                        path: 'productId',
+                                        model: ProductDocument.name,
+                                        select: { _id: 1, name: 1, image: 1, description: 1, price: 1 },
+                                        populate: [
+                                            {
+                                                path: 'image',
+                                                model: UploadDocuemnt.name,
+                                                select: { _id: 1, url: 1 },
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ],
+            },
+        );
+
+        return existCart;
     }
 }

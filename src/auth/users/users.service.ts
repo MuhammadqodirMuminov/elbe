@@ -63,7 +63,7 @@ export class UsersService {
 
     private getUserFromDocument(userDocument: UserDocument) {
         return {
-            _id: userDocument._id.toHexString(),
+            _id: userDocument._id,
             email: userDocument.email,
             password: userDocument?.password,
         };

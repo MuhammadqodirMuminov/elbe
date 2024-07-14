@@ -10,6 +10,8 @@ import { CartDocument } from 'src/cart/models/cart.schema';
 import { OrderStatus } from 'src/common';
 import { PaymentDocuemnt } from 'src/payment/models/payment.schema';
 import { QueryProductDto } from 'src/products/dto/query.dto';
+import { ProductsService } from 'src/products/products.service';
+import { VariantsService } from 'src/variants/variants.service';
 import { OrderDocument } from './models/order.schema';
 
 @Injectable()
@@ -19,13 +21,13 @@ export class OrdersService {
         @InjectModel(CartItemsDocument.name) private readonly cartItemModel: Model<CartItemsDocument>,
         private readonly usersRepository: UsersRepository,
         private readonly cartService: CartService,
+        private readonly productService: ProductsService,
+        private readonly variantService: VariantsService,
     ) {}
 
     async upsert(user: UserDocument, address: AdressDocument, cart: CartDocument) {
         if (!cart?.items?.length) {
-            throw new ForbiddenException({
-                cart: 'Cart should contain atleast 1 item.',
-            });
+            throw new ForbiddenException('Cart should contain atleast 1 item.');
         }
         let order = await this.orderModel.findOne({
             cart_id: cart._id,
@@ -81,7 +83,11 @@ export class OrdersService {
 
         // freeze all the cart items with price
         cart?.items?.forEach(async (item) => {
-            await this.cartItemModel.updateOne({ _id: item._id, price: item.price });
+            const variant = await this.variantService.findOne(item.variant_id._id.toString());
+            const product = await this.productService.findOne(variant.productId._id.toString());
+
+            await this.productService.updateWithQuery({ _id: variant.productId._id }, { $inc: { sold_amount: item.quantity } });
+            await this.cartItemModel.updateOne({ _id: item._id, price: (product.price + variant.price) * item.quantity });
         });
 
         await this.cartService.update(cart._id.toString(), { is_order_created: true });
@@ -92,6 +98,7 @@ export class OrdersService {
                 orderStatus: status,
                 success_payment_id: payment.transaction_id,
                 static_address: order.static_address,
+                $push: { payments: payment._id },
             },
         );
     }

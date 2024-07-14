@@ -23,8 +23,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
                 _id: userId,
             });
         } catch (err) {
-            console.log(err);
-
             throw new UnauthorizedException(err?.message);
         }
     }
