@@ -1,31 +1,30 @@
-// src/order/order.controller.ts
-import { Controller, Get } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { Order } from './models/order.schema';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from 'src/auth/current-user.decorator';
+import JwtAuthGuard from 'src/auth/guards/jwt-auth.guard';
+import { UserDocument } from 'src/auth/users/models/user.schema';
+import { QueryProductDto } from 'src/products/dto/query.dto';
 import { OrdersService } from './orders.service';
 
 @ApiTags('orders')
 @Controller('orders')
 export class OrdersController {
-    constructor(private readonly orderService: OrdersService) {}
+    constructor(private readonly ordersService: OrdersService) {}
 
-    // @Post()
-    // async createOrder(@Body() createOrderDto: CreateOrderDto): Promise<Order> {
-    //     return this.orderService.createOrder(createOrderDto);
-    // }
-
-    @Get()
-    async findAll(): Promise<Order[]> {
-        return this.orderService.findAll();
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Get('user-orders')
+    async getAll(@Query() query: QueryProductDto, @CurrentUser() user: UserDocument) {
+        return await this.ordersService.getAll(query, user);
     }
 
-    // @Get(':id')
-    // async findById(@Param('id') id: string): Promise<Order> {
-    //     return this.orderService.findById(id);
-    // }
+    @Get('get-all-orders')
+    async findAll() {
+        return await this.ordersService.findAll();
+    }
 
-    // @Patch(':id/status')
-    // async updateOrderStatus(@Param('id') id: string, @Body() updateOrderStatusDto: UpdateOrderStatusDto): Promise<Order> {
-    //     return this.orderService.updateOrderStatus(id, updateOrderStatusDto);
-    // }
+    @Get(':id')
+    async getOne(@Param('id') id: string) {
+        return await this.ordersService.getOrderById(id);
+    }
 }

@@ -1,14 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { AdressDocument } from 'src/adresses/models/adress.schema';
 import { CartDocument } from 'src/cart/models/cart.schema';
 import { OrderStatus } from 'src/common';
+import { AbstractDocument } from 'src/database/abstract.schema';
 import { PaymentDocuemnt } from 'src/payment/models/payment.schema';
 
-export type OrderDocument = Order & Document;
-
 @Schema({ versionKey: false, timestamps: true })
-export class Order {
+export class OrderDocument extends AbstractDocument {
     @Prop({ type: Types.ObjectId, ref: 'UserDocument', required: true })
     user_id: Types.ObjectId;
 
@@ -26,6 +25,9 @@ export class Order {
 
     @Prop({ type: String, enum: OrderStatus, default: OrderStatus.CREATED, required: true })
     orderStatus: OrderStatus;
+
+    @Prop({ type: JSON, nullable: true })
+    static_address: JSON;
 }
 
-export const OrderSchema = SchemaFactory.createForClass(Order);
+export const OrderSchama = SchemaFactory.createForClass(OrderDocument);

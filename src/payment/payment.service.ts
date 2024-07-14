@@ -1,18 +1,84 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { PayOptions } from 'src/common';
+import { Model, Types } from 'mongoose';
+import { UserDocument } from 'src/auth/users/models/user.schema';
+import { CartService } from 'src/cart/cart.service';
+import { PaymentStatus } from 'src/common';
+import { OrdersService } from 'src/orders/orders.service';
+import { QueryProductDto } from 'src/products/dto/query.dto';
+import { StripeService } from 'src/stripe/stripe.service';
+import { AdressesService } from '../adresses/adresses.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
-import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { PaymentDocuemnt } from './models/payment.schema';
 
 @Injectable()
 export class PaymentService {
-    constructor(@InjectModel(PaymentDocuemnt.name) private paymentModel: Model<PaymentDocuemnt>) {}
+    constructor(
+        @InjectModel(PaymentDocuemnt.name) private paymentModel: Model<PaymentDocuemnt>,
+        private readonly cartService: CartService,
+        private readonly addressService: AdressesService,
+        private readonly orderService: OrdersService,
+        @Inject(forwardRef(() => StripeService)) private readonly stripeService: StripeService,
+    ) {}
 
-    async create(createPaymentDto: CreatePaymentDto): Promise<PaymentDocuemnt> {
-        const createdPayment = new this.paymentModel({ ...createPaymentDto, status: PayOptions.SUCCEEDED, transactionId: 2 });
-        return createdPayment.save();
+    async getAll(query: QueryProductDto, user: UserDocument) {
+        try {
+            const { page = 1, limit = 10, search = '' } = query;
+            const orders = await this.paymentModel
+                .find({ user_id: new Types.ObjectId(user._id) })
+                .skip((+page - 1) * +limit)
+                .limit(Number(limit));
+
+            const total = await this.paymentModel.countDocuments({ category: user._id }).exec();
+
+            return { data: orders, total, page: +page, limit: +limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
+        } catch (error) {
+            throw new BadRequestException(error?.message);
+        }
+    }
+
+    async create(createPaymentDto: CreatePaymentDto, user: UserDocument) {
+        try {
+            const cart = await this.cartService.getOrcreate(user);
+            const address = await this.addressService.findOne(createPaymentDto.address_id);
+
+            const order = await this.orderService.upsert(user, address, cart);
+
+            const payment = await this.paymentModel.findOne({
+                order_id: order._id,
+                status: PaymentStatus.PENDING,
+            });
+
+            if (payment) {
+                await this.stripeService.cancelIntent(payment.transaction_id);
+                await this.paymentModel.updateOne({ _id: payment._id }, { paymentStatus: PaymentStatus.CANCELED });
+            }
+
+            const productPrice = 10;
+
+            const amount = cart.items.reduce((total, item) => total + productPrice, 0);
+
+            const intent = await this.stripeService.createPaymentIntent(amount * 100);
+
+            const newPayment = await this.paymentModel.create({
+                _id: new Types.ObjectId(),
+                transaction_id: intent.id,
+                order_id: order._id,
+                user_id: new Types.ObjectId(user._id),
+                paymentGateway: createPaymentDto.payment_gateway,
+            });
+
+            return {
+                metadata: {
+                    clientSecret: intent.client_secret,
+                },
+                payment: newPayment,
+            };
+        } catch (error) {
+            console.log(error);
+
+            throw new HttpException(error?.message, error?.status || 500);
+        }
     }
 
     async findAll(): Promise<PaymentDocuemnt[]> {
@@ -23,7 +89,8 @@ export class PaymentService {
         return this.paymentModel.findById(id).populate('order').exec();
     }
 
-    async update(id: string, updatePaymentDto: UpdatePaymentDto): Promise<PaymentDocuemnt> {
-        return this.paymentModel.findByIdAndUpdate(id, updatePaymentDto, { new: true }).exec();
+    async getPaymentByTransactionId(id: string) {
+        const payment = await this.paymentModel.findOne({ transaction_id: id });
+        return payment;
     }
 }

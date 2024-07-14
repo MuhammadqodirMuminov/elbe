@@ -13,6 +13,9 @@ export class CartItemsDocument extends AbstractDocument {
 
     @Prop({ type: Types.ObjectId, ref: 'CartDocument', required: true })
     cart_id: Types.ObjectId;
+
+    @Prop({ type: Number, required: false, default: 0 })
+    price: number;
 }
 
 export const CartItemsSchema = SchemaFactory.createForClass(CartItemsDocument);

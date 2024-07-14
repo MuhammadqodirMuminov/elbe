@@ -2,21 +2,22 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import * as Joi from 'joi';
 import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
+import { AdressesModule } from './adresses/adresses.module';
 import { AuthModule } from './auth/auth.module';
-import { CategoriesModule } from './categories/categories.module';
-import { DatabaseModule } from './database/database.module';
-import { MailModule } from './mail/mail.module';
-import { UploadModule } from './upload/upload.module';
-import { ProductsModule } from './products/products.module';
+import { BrandsModule } from './brands/brands.module';
 import { CartModule } from './cart/cart.module';
+import { CategoriesModule } from './categories/categories.module';
+import { CollectionsModule } from './collections/collections.module';
+import { DatabaseModule } from './database/database.module';
+import { DiscountsModule } from './discounts/discounts.module';
+import { MailModule } from './mail/mail.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentModule } from './payment/payment.module';
-import { DiscountsModule } from './discounts/discounts.module';
+import { ProductsModule } from './products/products.module';
 import { ReviewsModule } from './reviews/reviews.module';
-import { AdressesModule } from './adresses/adresses.module';
+import { UploadModule } from './upload/upload.module';
 import { VariantsModule } from './variants/variants.module';
-import { BrandsModule } from './brands/brands.module';
-import { CollectionsModule } from './collections/collections.module';
+import { StripeModule } from './stripe/stripe.module';
 //update
 @Module({
     imports: [
@@ -56,6 +57,7 @@ import { CollectionsModule } from './collections/collections.module';
         VariantsModule,
         BrandsModule,
         CollectionsModule,
+        StripeModule,
     ],
 })
 export class AppModule {}
