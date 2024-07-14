@@ -92,6 +92,7 @@ export class OrdersService {
                 orderStatus: status,
                 success_payment_id: payment.transaction_id,
                 static_address: order.static_address,
+                $push: { payments: payment._id },
             },
         );
     }

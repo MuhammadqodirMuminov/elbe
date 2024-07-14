@@ -54,6 +54,8 @@ export class StripeService {
         switch (event.type) {
             case 'payment_intent.succeeded':
                 await this.orderService.afterPaymentConcluded(order, OrderStatus.SUCCEEDED, payment);
+                payment.paymentStatus = PaymentStatus.DONE;
+                await payment.save();
                 break;
             case 'payment_intent.canceled':
                 payment.paymentStatus = PaymentStatus.CANCELED;
