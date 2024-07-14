@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model, QueryOptions, Types } from 'mongoose';
+import { FilterQuery, Model, QueryOptions, Types, UpdateQuery, UpdateWithAggregationPipeline } from 'mongoose';
 import { BrandsService } from 'src/brands/brands.service';
 import { CategoryRepository } from 'src/categories/category.repository';
 import { CategoryDocument } from 'src/categories/models/category.schema';
@@ -148,25 +148,17 @@ export class ProductsService {
 
     async findBestsellers() {
         try {
-            const productSales = new Map<string, number>();
-
-            const products = await this.productModel.find();
-            products.slice(0, 100).forEach((p) => {
-                const count = productSales.get(p?._id?.toString()) || 0;
-                productSales.set(p._id.toString(), count + 1);
-            });
-
-            const sortedProducts = Array.from(productSales.entries()).sort((a, b) => b[1] - a[1]);
-            const bestSellerIds = sortedProducts.slice(0, 4).map((entry) => entry[0]);
-
-            return this.productModel
-                .find({ _id: { $in: bestSellerIds } }, {}, {})
+            const products = await this.productModel
+                .find({}, {}, {})
+                .sort({ sold_amount: -1 })
                 .populate([
                     { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
                     { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
                     { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
                 ])
                 .populate([{ path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } }] }]);
+
+            return products.slice(0, 4);
         } catch (error) {
             throw new BadRequestException(error?.message);
         }
@@ -183,6 +175,9 @@ export class ProductsService {
 
     async getAllWithQuery(filterQuery: FilterQuery<ProductDocument>, query?: QueryOptions<ProductDocument>) {
         return await this.productModel.find(filterQuery, {}, query).exec();
+    }
+    async getOneWithQuery(filterQuery: FilterQuery<ProductDocument>, query?: QueryOptions<ProductDocument>) {
+        return await this.productModel.findOne(filterQuery, {}, query).exec();
     }
 
     async detail(id: string) {
@@ -238,6 +233,10 @@ export class ProductsService {
         const updatedProduct = await this.productModel.findByIdAndUpdate(id, body, { new: true }).exec();
 
         return updatedProduct;
+    }
+
+    async updateWithQuery(filter: FilterQuery<ProductDocument>, update?: UpdateQuery<ProductDocument> | UpdateWithAggregationPipeline) {
+        return await this.productModel.updateOne(filter, update);
     }
 
     async remove(id: string): Promise<any> {

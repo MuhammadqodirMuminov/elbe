@@ -40,6 +40,7 @@ export class PaymentService {
     async create(createPaymentDto: CreatePaymentDto, user: UserDocument) {
         try {
             const cart = await this.cartService.getOrcreate(user);
+
             const address = await this.addressService.findOne(createPaymentDto.address_id);
 
             // create an order or get existing order

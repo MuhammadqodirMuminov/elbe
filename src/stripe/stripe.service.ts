@@ -48,8 +48,10 @@ export class StripeService {
             return;
         }
         const data = event.data.object as Stripe.PaymentIntent;
+
         const payment = await this.paymentService.getPaymentByTransactionId(data.id);
-        const order = await this.orderService.getOrderById(payment.order_id.toString());
+
+        const order = await this.orderService.getOrderById(payment?.order_id.toString());
 
         switch (event.type) {
             case 'payment_intent.succeeded':

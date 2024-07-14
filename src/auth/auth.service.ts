@@ -58,7 +58,7 @@ export class AuthService {
 
         const userExist = await this.usersService.getUser({ email });
 
-        const user = await this.usersService.update(userExist._id, {
+        const user = await this.usersService.update(userExist._id.toString(), {
             status: USER_STATUS.ACTIVE,
         });
 

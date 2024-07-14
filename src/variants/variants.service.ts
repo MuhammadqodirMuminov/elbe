@@ -49,8 +49,18 @@ export class VariantsService {
     }
 
     async findOne(id: string): Promise<VariantDocument> {
-        const variant = await this.variantModel.findOne({ _id: id }, { productId: 0 }, { populate: [{ path: 'images', select: { _id: 1, url: 1 }, model: UploadDocuemnt.name }] });
+        const variant = await this.variantModel.findOne(
+            { _id: id },
+            {},
+            {
+                populate: [
+                    { path: 'images', select: { _id: 1, url: 1 }, model: UploadDocuemnt.name },
+                    { path: 'productId', model: ProductDocument.name, select: { _id: 1, name: 1 } },
+                ],
+            },
+        );
         if (!variant) throw new NotFoundException('Variant not found');
+
         return variant;
     }
 
