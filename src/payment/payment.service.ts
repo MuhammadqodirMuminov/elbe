@@ -61,7 +61,7 @@ export class PaymentService {
                 return total + (Number(item.variant_id.productId.price) + Number(item.variant_id.price)) * item.quantity;
             }, 0);
 
-            const intent = await this.stripeService.createPaymentIntent(amount);
+            const intent = await this.stripeService.createPaymentIntent(amount, createPaymentDto.payment_method);
 
             const newPayment = await this.paymentModel.create({
                 _id: new Types.ObjectId(),

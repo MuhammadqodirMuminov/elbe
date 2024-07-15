@@ -22,10 +22,10 @@ export class StripeService {
         return { publishableKey: pkey };
     }
 
-    async createPaymentIntent(amount: number) {
+    async createPaymentIntent(amount: number, payment_method: string) {
         const paymentIntent = await this.client.paymentIntents.create({
             amount,
-            currency: 'USD',
+            currency: 'usd',
             automatic_payment_methods: {
                 enabled: true,
             },
