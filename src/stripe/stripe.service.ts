@@ -26,9 +26,7 @@ export class StripeService {
         const paymentIntent = await this.client.paymentIntents.create({
             amount,
             currency: 'usd',
-            automatic_payment_methods: {
-                enabled: true,
-            },
+            payment_method_types: [payment_method],
         });
 
         return paymentIntent;
