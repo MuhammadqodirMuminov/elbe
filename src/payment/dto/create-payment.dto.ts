@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsMongoId, IsNotEmpty } from 'class-validator';
+import { IsEnum, IsMongoId, IsNotEmpty, IsString } from 'class-validator';
 import { PaymentMethods } from 'src/common';
 
 export class CreatePaymentDto {
@@ -12,4 +12,9 @@ export class CreatePaymentDto {
     @IsEnum(PaymentMethods)
     @IsNotEmpty()
     payment_gateway: PaymentMethods;
+
+    @ApiProperty({ type: 'string', required: true })
+    @IsString()
+    @IsNotEmpty()
+    payment_method: string;
 }
