@@ -20,8 +20,13 @@ export class PaymentController {
         return this.paymentService.create(createPaymentDto, user);
     }
 
-    @Get()
+    @Get('for-user')
     async getAll(@Query() query: QueryProductDto, @CurrentUser() user: UserDocument) {
         return this.paymentService.getAll(query, user);
+    }
+
+    @Get()
+    async getUsers() {
+        return await this.paymentService.findAll();
     }
 }

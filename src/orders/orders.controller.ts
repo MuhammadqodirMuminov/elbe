@@ -18,7 +18,7 @@ export class OrdersController {
         return await this.ordersService.getAll(query, user);
     }
 
-    @Get('get-all-orders')
+    @Get()
     async findAll() {
         return await this.ordersService.findAll();
     }
