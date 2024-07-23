@@ -25,7 +25,7 @@ export class StripeService {
     async createPaymentIntent(amount: number, payment_method: string) {
         const paymentIntent = await this.client.paymentIntents.create({
             amount,
-            currency: 'usd',
+            currency: 'gbp',
             payment_method_types: [payment_method],
         });
 
