@@ -57,11 +57,11 @@ export class PaymentService {
             }
 
             // calculate price  of cart
-            const amount = cart.items.reduce((total, item: any) => {
-                return total + Number(item.variant_id.productId?.price) * item.quantity;
-            }, 0);
+            // const amount = cart.items.reduce((total, item: any) => {
+            //     return total + Number(item.variant_id.productId?.price) * item.quantity;
+            // }, 0);
 
-            const intent = await this.stripeService.createPaymentIntent(amount, createPaymentDto.payment_method);
+            const intent = await this.stripeService.createPaymentIntent(50, createPaymentDto.payment_method);
 
             const newPayment = await this.paymentModel.create({
                 _id: new Types.ObjectId(),
@@ -78,6 +78,8 @@ export class PaymentService {
                 payment: newPayment,
             };
         } catch (error) {
+            console.log(error);
+
             throw new HttpException(error?.message, error?.status || 500);
         }
     }
