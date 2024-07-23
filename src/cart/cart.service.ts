@@ -111,6 +111,7 @@ export class CartService {
                     quantity: updateActiveCart.quantity,
                     cart_id: cart._id,
                     _id: new Types.ObjectId(),
+                    price: variant?.price,
                 });
                 await this.cartModel.updateOne({ _id: cart._id, is_order_created: false }, { $push: { items: cartItem._id } });
             } else {
