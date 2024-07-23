@@ -58,7 +58,7 @@ export class PaymentService {
 
             // calculate price  of cart
             const amount = cart.items.reduce((total, item: any) => {
-                return total + (Number(item.variant_id.productId.price) + Number(item.variant_id.price)) * item.quantity;
+                return total + (Number(item.variant_id.productId?.price) + Number(item.variant_id?.price || 0)) * item.quantity;
             }, 0);
 
             const intent = await this.stripeService.createPaymentIntent(amount, createPaymentDto.payment_method);
