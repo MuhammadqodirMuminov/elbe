@@ -12,7 +12,7 @@ export class CategoryDocument extends AbstractDocument {
     @Prop({ default: false })
     isActive?: boolean;
 
-    @Prop({ required: true, unique: true })
+    @Prop({ required: true })
     name: string;
 
     @Prop()

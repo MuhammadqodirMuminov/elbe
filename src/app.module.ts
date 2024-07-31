@@ -18,6 +18,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { UploadModule } from './upload/upload.module';
 import { VariantsModule } from './variants/variants.module';
 import { StripeModule } from './stripe/stripe.module';
+import { WishlistsModule } from './wishlists/wishlists.module';
 //update
 @Module({
     imports: [
@@ -58,6 +59,7 @@ import { StripeModule } from './stripe/stripe.module';
         BrandsModule,
         CollectionsModule,
         StripeModule,
+        WishlistsModule,
     ],
 })
 export class AppModule {}
