@@ -138,7 +138,7 @@ export class ProductsService {
         return { data: products, total, page: +page, limit: +limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
     }
 
-    async findOne(id: string): Promise<any> {
+    async findOne(id: string): Promise<ProductDocument> {
         const product = await this.productModel.findById(id, {}, { populate: [{ path: 'category' }] }).exec();
         if (!product) {
             throw new NotFoundException('Product not found');
