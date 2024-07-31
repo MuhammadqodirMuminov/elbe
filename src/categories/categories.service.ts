@@ -39,7 +39,7 @@ export class CategoriesService {
     async getAllParents() {
         try {
             const parents = await this.categoryModel.find(
-                { parent_id: null },
+                { parent_id: null, isActive: true },
                 { products: 0 },
                 {
                     populate: [{ path: 'image', select: { _id: 1, url: 1 } }],
