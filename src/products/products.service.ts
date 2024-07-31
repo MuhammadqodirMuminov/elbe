@@ -77,10 +77,11 @@ export class ProductsService {
     async createChildCategory(categoryId: string, query: QueryProductDto) {
         const { page = 1, limit = 10, search = '' } = query;
         const category = await this.categoryModel.findOne({ _id: categoryId, parent_id: { $ne: null } });
+
         if (!category) throw new BadRequestException('please select a child categpry');
 
         const products = await this.productModel
-            .find({ category: category._id, $or: [{ name: new RegExp(search, 'i') }, { description: new RegExp(search, 'i') }] })
+            .find({ category: category._id.toString() })
             .skip((+page - 1) * +limit)
             .limit(Number(limit))
             .populate([
@@ -91,7 +92,7 @@ export class ProductsService {
             .populate([{ path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } }] }])
             .exec();
 
-        const total = await this.productModel.countDocuments({ category: category._id }).exec();
+        const total = await this.productModel.countDocuments({ category: category._id.toString() }).exec();
 
         return { data: products, total, page: +page, limit: +limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
     }
