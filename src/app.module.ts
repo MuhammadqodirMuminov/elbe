@@ -15,11 +15,11 @@ import { OrdersModule } from './orders/orders.module';
 import { PaymentModule } from './payment/payment.module';
 import { ProductsModule } from './products/products.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { StripeModule } from './stripe/stripe.module';
 import { UploadModule } from './upload/upload.module';
 import { VariantsModule } from './variants/variants.module';
-import { StripeModule } from './stripe/stripe.module';
 import { WishlistsModule } from './wishlists/wishlists.module';
-//update
+
 @Module({
     imports: [
         PinoLoggerModule.forRoot({
