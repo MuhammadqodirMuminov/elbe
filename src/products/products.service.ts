@@ -105,7 +105,7 @@ export class ProductsService {
         const category = await this.categoryModel.findOne({ _id: categoryId, parent_id: { $ne: null } });
 
         if (!category) throw new BadRequestException('please select a child categpry');
-
+// update
         const products = await this.productModel
             .find({ category: category._id.toString() })
             .skip((+page - 1) * +limit)
