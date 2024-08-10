@@ -58,8 +58,7 @@ export class ProductsService {
         const queryFilter: Record<string, any> = {};
 
         if (query.categoryId && query.categoryId.length > 0) {
-            const allCategoryIds = await this.getAllChildCategories(validatedFilterQuery.categoryId as string[]);
-            queryFilter['category'] = { $in: allCategoryIds };
+            queryFilter['category'] = { $in: (validatedFilterQuery.categoryId as string[]).map((c) => new Types.ObjectId(c)) };
         }
 
         if (query.minPrice && query.maxPrice) {
@@ -67,35 +66,45 @@ export class ProductsService {
         }
 
         if (query.brandId && query.brandId.length > 0) {
-            queryFilter.brand = { $in: validatedFilterQuery.brandId };
+            queryFilter.brand = { $in: (validatedFilterQuery.brandId as string[]).map((b) => new Types.ObjectId(b)) };
         }
 
         if (query.size && query.size.length > 0) {
             queryFilter['variants.size'] = { $in: validatedFilterQuery.size };
         }
 
-        console.log(queryFilter);
-
-        const filteredProduct = await this.productModel.find(queryFilter);
-
-        const filter = search ? { $or: [{ name: new RegExp(search, 'i') }, { description: new RegExp(search, 'i') }] } : {};
+        if (query.search) {
+            queryFilter['$or'] = [
+                { name: new RegExp(query.search, 'i') },
+                { description: new RegExp(query.search, 'i') },
+                {
+                    variants: {
+                        $elemMatch: {
+                            barcode: new RegExp(query.search, 'i'),
+                        },
+                    },
+                },
+            ];
+        }
 
         const [data, total] = await Promise.all([
             await this.productModel
-                .find(filter)
+                .find(queryFilter)
                 .skip((+page - 1) * +limit)
                 .limit(Number(limit))
                 .populate([
                     { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
                     { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
                     { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
+                    {
+                        path: 'variants.images',
+                        model: UploadDocuemnt.name,
+                        select: { _id: 1, url: 1 },
+                    },
                 ])
-                .populate([{ path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } }] }])
                 .exec(),
-            await this.productModel.countDocuments(filter).exec(),
+            await this.productModel.countDocuments(queryFilter).exec(),
         ]);
-
-        console.log(data);
 
         return { data, total, page, limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
     }
@@ -105,7 +114,7 @@ export class ProductsService {
         const category = await this.categoryModel.findOne({ _id: categoryId, parent_id: { $ne: null } });
 
         if (!category) throw new BadRequestException('please select a child categpry');
-// update
+        // update
         const products = await this.productModel
             .find({ category: category._id.toString() })
             .skip((+page - 1) * +limit)
@@ -285,13 +294,13 @@ export class ProductsService {
         return deletedProduct;
     }
 
-    async getAllChildCategories(categoryIds: string[]): Promise<string[]> {
-        let allCategoryIds: string[] = [];
+    async getAllChildCategories(categoryIds: string[]): Promise<Types.ObjectId[]> {
+        let allCategoryIds: Types.ObjectId[] = [];
 
         for (const categoryId of categoryIds) {
             const category = await this.categoryModel.findById(categoryId).exec();
             if (!category) throw new NotFoundException('category bot found');
-            allCategoryIds.push(categoryId);
+            allCategoryIds.push(category._id);
         }
 
         return allCategoryIds;
