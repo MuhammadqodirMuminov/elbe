@@ -27,3 +27,11 @@ export enum CollectionType {
     BRAND = 'BRAND',
     CATEGORY = 'CATEGORY',
 }
+
+export enum ProductSortTypes {
+    NEWEST = 'NEWEST',
+    CHEAPEST = 'CHEAPEST',
+    EXPENSIVE = 'EXPENSIVE',
+    DISCOUNTS = 'DISCOUNTS',
+    POPULAR = 'POPULAR',
+}

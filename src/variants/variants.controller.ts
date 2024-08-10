@@ -11,7 +11,7 @@ export class VariantsController {
 
     @Post()
     async create(@Body() createVariantDto: CreateVariantDto) {
-        return this.variantsService.create(createVariantDto);
+        return await this.variantsService.create(createVariantDto);
     }
 
     @Get('product/:productId')

@@ -16,8 +16,8 @@ export class ProductsController {
     }
 
     @Get()
-    findAll(@Query() query: QueryProductDto) {
-        return this.productsService.findAll(query);
+    async findAll(@Query() query: QueryProductDto) {
+        return await this.productsService.findAll(query);
     }
 
     @Get('best-sellers')

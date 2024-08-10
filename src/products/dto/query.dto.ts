@@ -1,7 +1,43 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumberString, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNumberString, IsOptional, IsString } from 'class-validator';
+import { ProductSortTypes } from 'src/common';
 
 export class QueryProductDto {
+    @ApiProperty({ type: String, required: false, isArray: true })
+    @IsOptional()
+    @IsString({ each: true })
+    categoryId?: string[] | string;
+
+    @ApiProperty({ type: String, required: false, isArray: true })
+    @IsOptional()
+    @IsString({ each: true })
+    size?: string[] | string;
+
+    @ApiProperty({ type: String, required: false, isArray: true })
+    @IsOptional()
+    @IsString({ each: true })
+    color?: string[] | string;
+
+    @ApiProperty({ type: String, required: false, isArray: true })
+    @IsOptional()
+    @IsString({ each: true })
+    brandId?: string[] | string;
+
+    @ApiProperty({ type: String, required: false })
+    @IsOptional()
+    @IsString()
+    minPrice?: string;
+
+    @ApiProperty({ type: String, required: false })
+    @IsOptional()
+    @IsString()
+    maxPrice?: string;
+
+    @ApiProperty({ type: 'enum', enum: ProductSortTypes, example: ProductSortTypes.NEWEST, required: false })
+    @IsOptional()
+    @IsEnum(ProductSortTypes)
+    sortBy?: ProductSortTypes;
+
     @ApiProperty({ required: false })
     @IsOptional()
     @IsString()

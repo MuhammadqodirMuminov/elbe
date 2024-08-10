@@ -54,6 +54,30 @@ export class ProductsService {
 
     async findAll(query: QueryProductDto) {
         const { page = 1, limit = 10, search = '' } = query;
+        const validatedFilterQuery = await this.validateFilterQuery(query);
+        const queryFilter: Record<string, any> = {};
+
+        if (query.categoryId && query.categoryId.length > 0) {
+            const allCategoryIds = await this.getAllChildCategories(validatedFilterQuery.categoryId as string[]);
+            queryFilter['category'] = { $in: allCategoryIds };
+        }
+
+        if (query.minPrice && query.maxPrice) {
+            queryFilter.price = { $gte: Number(query.minPrice), $lte: Number(query.maxPrice) };
+        }
+
+        if (query.brandId && query.brandId.length > 0) {
+            queryFilter.brand = { $in: validatedFilterQuery.brandId };
+        }
+
+        if (query.size && query.size.length > 0) {
+            queryFilter['variants.size'] = { $in: validatedFilterQuery.size };
+        }
+
+        console.log(queryFilter);
+
+        const filteredProduct = await this.productModel.find(queryFilter);
+
         const filter = search ? { $or: [{ name: new RegExp(search, 'i') }, { description: new RegExp(search, 'i') }] } : {};
 
         const [data, total] = await Promise.all([
@@ -71,7 +95,9 @@ export class ProductsService {
             await this.productModel.countDocuments(filter).exec(),
         ]);
 
-        return { data: data, total, page, limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
+        console.log(data);
+
+        return { data, total, page, limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
     }
 
     async createChildCategory(categoryId: string, query: QueryProductDto) {
@@ -177,6 +203,7 @@ export class ProductsService {
     async getAllWithQuery(filterQuery: FilterQuery<ProductDocument>, query?: QueryOptions<ProductDocument>) {
         return await this.productModel.find(filterQuery, {}, query).exec();
     }
+
     async getOneWithQuery(filterQuery: FilterQuery<ProductDocument>, query?: QueryOptions<ProductDocument>) {
         return await this.productModel.findOne(filterQuery, {}, query).exec();
     }
@@ -242,7 +269,8 @@ export class ProductsService {
 
     async remove(id: string): Promise<any> {
         const product = await this.getOne(id);
-        if (product.variants.length !== 0) {
+
+        if (product.variants.length) {
             await Promise.all(
                 product.variants.map(async (v) => {
                     await this.variantService.remove(v._id.toString());
@@ -255,5 +283,47 @@ export class ProductsService {
         const deletedProduct = await this.productModel.findByIdAndDelete(id).exec();
 
         return deletedProduct;
+    }
+
+    async getAllChildCategories(categoryIds: string[]): Promise<string[]> {
+        let allCategoryIds: string[] = [];
+
+        for (const categoryId of categoryIds) {
+            const category = await this.categoryModel.findById(categoryId).exec();
+            if (!category) throw new NotFoundException('category bot found');
+            allCategoryIds.push(categoryId);
+        }
+
+        return allCategoryIds;
+    }
+
+    async validateFilterQuery(query: QueryProductDto) {
+        let validatedQuery: Partial<QueryProductDto> = { ...query };
+
+        if (query.categoryId) {
+            if (!Array.isArray(query.categoryId)) {
+                validatedQuery.categoryId = [query.categoryId];
+            }
+        }
+
+        if (query.brandId) {
+            if (!Array.isArray(query.brandId)) {
+                validatedQuery.brandId = [query.brandId];
+            }
+        }
+
+        if (query.size) {
+            if (!Array.isArray(query.size)) {
+                validatedQuery.size = [query.size];
+            }
+        }
+
+        if (query.color) {
+            if (!Array.isArray(query.color)) {
+                validatedQuery.color = [query.color];
+            }
+        }
+
+        return validatedQuery;
     }
 }
