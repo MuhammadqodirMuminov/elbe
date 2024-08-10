@@ -31,7 +31,7 @@ export class VariantsService {
 
             const productvariant = await this.variantModel.create({ ...createVariantDto, productId: new Types.ObjectId(createVariantDto.productId), images: images, _id: new Types.ObjectId() });
 
-            await this.productModel.updateOne({ _id: product._id }, { $push: { variants: productvariant._id } });
+            await this.productModel.updateOne({ _id: product._id }, { $push: { variants: productvariant } });
 
             return productvariant;
         } catch (error) {
