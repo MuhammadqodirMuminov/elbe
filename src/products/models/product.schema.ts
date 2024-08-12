@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { BrandDocument } from 'src/brands/models/brand.schema';
 import { AbstractDocument } from 'src/database/abstract.schema';
+import { Discount } from 'src/discounts/models/discount.schema';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { VariantDocument } from 'src/variants/models/variant.schema';
 
@@ -19,6 +20,9 @@ export class ProductDocument extends AbstractDocument {
     @Prop({ type: Number, required: false, default: 0 })
     sold_amount: number;
 
+    @Prop({ type: Boolean, required: false, default: false })
+    isOnOffer?: boolean;
+
     @Prop({ type: Types.ObjectId, required: false, ref: BrandDocument.name })
     brand?: Types.ObjectId;
 
@@ -30,6 +34,9 @@ export class ProductDocument extends AbstractDocument {
 
     @Prop([{ type: Types.ObjectId, required: true, ref: VariantDocument.name }])
     variants: VariantDocument[];
+
+    @Prop({ type: Types.ObjectId, required: false, ref: Discount.name })
+    discounts?: Discount[];
 }
 
 export const ProductSchema = SchemaFactory.createForClass(ProductDocument);
