@@ -5,7 +5,7 @@ import { BrandsService } from 'src/brands/brands.service';
 import { CategoryRepository } from 'src/categories/category.repository';
 import { CategoryDocument } from 'src/categories/models/category.schema';
 import { CollectionsService } from 'src/collections/collections.service';
-import { CollectionType } from 'src/common';
+import { CollectionType, ProductSortTypes } from 'src/common';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { UploadService } from 'src/upload/upload.service';
 import { VariantDocument } from 'src/variants/models/variant.schema';
@@ -53,43 +53,50 @@ export class ProductsService {
     }
 
     async findAll(query: QueryProductDto) {
-        const { page = 1, limit = 10, search = '' } = query;
-        const validatedFilterQuery = await this.validateFilterQuery(query);
-        const queryFilter: Record<string, any> = {};
+        const { page = 1, limit = 10, sortBy } = query;
+        const queryFilter = await this.createProductsFilterQuery(query);
 
-        if (query.categoryId && query.categoryId.length > 0) {
-            queryFilter['category'] = { $in: (validatedFilterQuery.categoryId as string[]).map((c) => new Types.ObjectId(c)) };
-        }
+        let sort: Record<string, any> = { createdAt: -1 };
 
-        if (query.minPrice && query.maxPrice) {
-            queryFilter.price = { $gte: Number(query.minPrice), $lte: Number(query.maxPrice) };
-        }
-
-        if (query.brandId && query.brandId.length > 0) {
-            queryFilter.brand = { $in: (validatedFilterQuery.brandId as string[]).map((b) => new Types.ObjectId(b)) };
-        }
-
-        if (query.size && query.size.length > 0) {
-            queryFilter['variants.size'] = { $in: validatedFilterQuery.size };
-        }
-
-        if (query.search) {
-            queryFilter['$or'] = [
-                { name: new RegExp(query.search, 'i') },
-                { description: new RegExp(query.search, 'i') },
-                {
-                    variants: {
-                        $elemMatch: {
-                            barcode: new RegExp(query.search, 'i'),
-                        },
-                    },
-                },
-            ];
+        switch (sortBy) {
+            case ProductSortTypes.CHEAPEST:
+                sort = { price: 1 };
+                break;
+            case ProductSortTypes.EXPENSIVE:
+                sort = { price: -1 };
+                break;
+            case ProductSortTypes.BESTSELLERS:
+                sort = { sold_amount: -1 };
+                break;
+            // case ProductSortTypes.DISCOUNTS:
+            //     return this.productModel
+            //         .aggregate([
+            //             { $match: queryFilter },
+            //             {
+            //                 $lookup: {
+            //                     from: 'discount',
+            //                     localField: '_id',
+            //                     foreignField: 'product',
+            //                     as: 'discounts',
+            //                 },
+            //             },
+            //             { $unwind: '$discounts' },
+            //             { $sort: { 'discounts.discountValue': -1 } },
+            //         ])
+            //         .exec();
+            case ProductSortTypes.OFFERS:
+                sort = { isOnOffer: -1, price: 1 };
+                break;
+            case ProductSortTypes.NEWEST:
+            default:
+                sort = { createdAt: -1 };
+                break;
         }
 
         const [data, total] = await Promise.all([
             await this.productModel
                 .find(queryFilter)
+                .sort(sort)
                 .skip((+page - 1) * +limit)
                 .limit(Number(limit))
                 .populate([
@@ -107,28 +114,6 @@ export class ProductsService {
         ]);
 
         return { data, total, page, limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
-    }
-
-    async createChildCategory(categoryId: string, query: QueryProductDto) {
-        const { page = 1, limit = 10, search = '' } = query;
-        const category = await this.categoryModel.findOne({ _id: categoryId, parent_id: { $ne: null } });
-
-        if (!category) throw new BadRequestException('please select a child categpry');
-        const products = await this.productModel
-            .find({ category: category._id.toString() })
-            .skip((+page - 1) * +limit)
-            .limit(Number(limit))
-            .populate([
-                { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
-                { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
-                { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
-            ])
-            .populate([{ path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } }] }])
-            .exec();
-
-        const total = await this.productModel.countDocuments({ category: category._id.toString() }).exec();
-
-        return { data: products, total, page: +page, limit: +limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
     }
 
     async getByCollection(collectionId: string, query: QueryProductDto) {
@@ -179,24 +164,6 @@ export class ProductsService {
         }
 
         return product;
-    }
-
-    async findBestsellers() {
-        try {
-            const products = await this.productModel
-                .find({}, {}, {})
-                .sort({ sold_amount: -1 })
-                .populate([
-                    { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
-                    { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
-                    { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
-                ])
-                .populate([{ path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } }] }]);
-
-            return products.slice(0, 4);
-        } catch (error) {
-            throw new BadRequestException(error?.message);
-        }
     }
 
     async getOne(id: string): Promise<ProductDocument> {
@@ -293,18 +260,6 @@ export class ProductsService {
         return deletedProduct;
     }
 
-    async getAllChildCategories(categoryIds: string[]): Promise<Types.ObjectId[]> {
-        let allCategoryIds: Types.ObjectId[] = [];
-
-        for (const categoryId of categoryIds) {
-            const category = await this.categoryModel.findById(categoryId).exec();
-            if (!category) throw new NotFoundException('category bot found');
-            allCategoryIds.push(category._id);
-        }
-
-        return allCategoryIds;
-    }
-
     async validateFilterQuery(query: QueryProductDto) {
         let validatedQuery: Partial<QueryProductDto> = { ...query };
 
@@ -333,5 +288,41 @@ export class ProductsService {
         }
 
         return validatedQuery;
+    }
+
+    async createProductsFilterQuery(query: QueryProductDto) {
+        const validatedFilterQuery = await this.validateFilterQuery(query);
+        const queryFilter: Record<string, any> = {};
+
+        if (query.categoryId && query.categoryId.length > 0) {
+            queryFilter['category'] = { $in: (validatedFilterQuery.categoryId as string[]).map((c) => new Types.ObjectId(c)) };
+        }
+
+        if (query.minPrice && query.maxPrice) {
+            queryFilter.price = { $gte: Number(query.minPrice), $lte: Number(query.maxPrice) };
+        }
+
+        if (query.brandId && query.brandId.length > 0) {
+            queryFilter.brand = { $in: (validatedFilterQuery.brandId as string[]).map((b) => new Types.ObjectId(b)) };
+        }
+
+        if (query.size && query.size.length > 0) {
+            queryFilter['variants.size'] = { $in: validatedFilterQuery.size };
+        }
+
+        if (query.search) {
+            queryFilter['$or'] = [
+                { name: new RegExp(query.search, 'i') },
+                { description: new RegExp(query.search, 'i') },
+                {
+                    variants: {
+                        $elemMatch: {
+                            barcode: new RegExp(query.search, 'i'),
+                        },
+                    },
+                },
+            ];
+        }
+        return queryFilter;
     }
 }

@@ -33,5 +33,6 @@ export enum ProductSortTypes {
     CHEAPEST = 'CHEAPEST',
     EXPENSIVE = 'EXPENSIVE',
     DISCOUNTS = 'DISCOUNTS',
-    POPULAR = 'POPULAR',
+    BESTSELLERS = 'BESTSELLERS',
+    OFFERS = 'OFFERS',
 }

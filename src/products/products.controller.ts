@@ -20,16 +20,6 @@ export class ProductsController {
         return await this.productsService.findAll(query);
     }
 
-    @Get('best-sellers')
-    async findBestsellers() {
-        return await this.productsService.findBestsellers();
-    }
-
-    @Get('child-category/:categoryId')
-    async getChildCategory(@Param('categoryId') categoryId: string, @Query() query: QueryProductDto) {
-        return await this.productsService.createChildCategory(categoryId, query);
-    }
-
     @Get('get-by-collection/:collectionId')
     async getByCollection(@Param('collectionId') collectionId: string, @Query() query: QueryProductDto) {
         return await this.productsService.getByCollection(collectionId, query);
@@ -46,8 +36,8 @@ export class ProductsController {
     }
 
     @Put(':id')
-    update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-        return this.productsService.update(id, updateProductDto);
+    async update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
+        return await this.productsService.update(id, updateProductDto);
     }
 
     @HttpCode(HttpStatus.NO_CONTENT)
