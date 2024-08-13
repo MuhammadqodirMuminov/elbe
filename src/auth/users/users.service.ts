@@ -1,10 +1,12 @@
 import { Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model, Types } from 'mongoose';
+import { AdressDocument } from 'src/adresses/models/adress.schema';
 import { comparePassword, hashPassword } from 'src/common';
 import { UploadService } from 'src/upload/upload.service';
 import { USER_STATUS } from '../interface/auth.interface';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { UserDocument } from './models/user.schema';
 import { UsersModule } from './users.module';
 import { UsersRepository } from './users.repository';
@@ -54,11 +56,13 @@ export class UsersService {
 
     async getUser(args: Partial<UserDocument>) {
         const userDocument = await this.usersRepository.findOne(args);
-        return this.getUserFromDocument(userDocument);
+        delete userDocument.password;
+
+        return userDocument;
     }
 
     async findWithQuery(filterQuery: FilterQuery<UserDocument>) {
-        return await this.userModel.findOne(filterQuery);
+        return await this.userModel.findOne(filterQuery, {}, { populate: [{ path: 'adresses', model: AdressDocument.name }] });
     }
 
     private getUserFromDocument(userDocument: UserDocument) {
@@ -73,13 +77,13 @@ export class UsersService {
         return await this.usersRepository.find({});
     }
 
-    async update(id: string, body: Partial<CreateUserDto>) {
+    async update(id: string, body: UpdateUserDto) {
         const updateData: Record<string, any> = {
             ...body,
         };
 
         const userDocument = await this.usersRepository.findOne({
-            _id: new mongoose.Types.ObjectId(id),
+            _id: new Types.ObjectId(id),
         });
 
         if (body.avatar) {

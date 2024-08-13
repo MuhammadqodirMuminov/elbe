@@ -11,6 +11,7 @@ import { AdressDocument } from './models/adress.schema';
 export class AdressesService {
     constructor(
         @InjectModel(AdressDocument.name) private readonly addressModel: Model<AdressDocument>,
+        @InjectModel(UserDocument.name) private readonly usersModel: Model<UserDocument>,
         private readonly usersService: UsersService,
     ) {}
 
@@ -23,6 +24,14 @@ export class AdressesService {
             data.customerId = costumer._id;
 
             const address = await this.addressModel.create({ _id: new Types.ObjectId(), ...data });
+
+            await this.usersModel.updateOne(
+                { _id: costumer._id },
+                {
+                    $push: { adresses: address._id },
+                },
+            );
+
             return address;
         } catch (error) {
             throw new HttpException(error?.message || 'Internal Server Error', error?.status || 500);

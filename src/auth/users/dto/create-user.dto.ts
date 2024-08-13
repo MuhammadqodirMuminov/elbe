@@ -31,5 +31,10 @@ export class CreateUserDto {
     @IsOptional()
     avatar: string;
 
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @IsString()
+    phone?: string;
+
     status: USER_STATUS;
 }

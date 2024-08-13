@@ -25,6 +25,9 @@ export class UserDocument extends AbstractDocument {
     @Prop({ type: String, enum: USER_STATUS })
     status: USER_STATUS;
 
+    @Prop({ type: String, required: false })
+    phone?: string;
+
     @Prop({ type: String, required: false, ref: UploadDocuemnt.name })
     avatar: Types.ObjectId;
 
