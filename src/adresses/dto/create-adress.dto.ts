@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsMongoId, IsString, MaxLength } from 'class-validator';
+import { IsString, MaxLength } from 'class-validator';
 
 export class CreateAdressDto {
     @ApiProperty({ example: 'Deepak' })
@@ -41,8 +41,4 @@ export class CreateAdressDto {
     @MaxLength(255, { always: true })
     @IsString({ always: true })
     zip_code: string;
-
-    @ApiProperty()
-    @IsMongoId()
-    customerId: string;
 }

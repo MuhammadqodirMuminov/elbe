@@ -11,26 +11,41 @@ import { AdressDocument } from './models/adress.schema';
 export class AdressesService {
     constructor(
         @InjectModel(AdressDocument.name) private readonly addressModel: Model<AdressDocument>,
+        @InjectModel(UserDocument.name) private readonly usersModel: Model<UserDocument>,
         private readonly usersService: UsersService,
     ) {}
 
-    async create(createAdressDto: CreateAdressDto) {
+    async create(createAdressDto: CreateAdressDto, userDocument: UserDocument) {
         try {
             const data: Record<string, any> = { ...createAdressDto };
 
-            const costumer = await this.usersService.findWithQuery({ _id: createAdressDto.customerId });
+            const costumer = await this.usersService.findWithQuery({ _id: userDocument._id });
             if (!costumer) throw new NotFoundException('No such customer found for this Id');
             data.customerId = costumer._id;
 
             const address = await this.addressModel.create({ _id: new Types.ObjectId(), ...data });
+
+            await this.usersModel.updateOne(
+                { _id: costumer._id },
+                {
+                    $push: { adresses: address._id },
+                },
+            );
+
             return address;
         } catch (error) {
             throw new HttpException(error?.message || 'Internal Server Error', error?.status || 500);
         }
     }
 
-    async findAll() {
-        return await this.addressModel.find({}, {}, { populate: { path: 'customerId', model: UserDocument.name } });
+    async findAll(customerId: string) {
+        const filterQuery: Record<string, any> = {};
+
+        if (customerId) {
+            filterQuery.customerId = new Types.ObjectId(customerId);
+        }
+
+        return await this.addressModel.find(filterQuery, {}, { populate: { path: 'customerId', model: UserDocument.name } });
     }
 
     async findOne(id: string) {
@@ -39,15 +54,9 @@ export class AdressesService {
         return adress;
     }
 
-    async update(id: string, updateAdressDto: UpdateAdressDto) {
+    async update(id: string, updateAdressDto: UpdateAdressDto, user: UserDocument) {
         try {
             const updateData: Record<string, any> = { ...updateAdressDto };
-            if (updateAdressDto.customerId) {
-                const customerId = await this.usersService.findWithQuery({ _id: new Types.ObjectId(updateAdressDto.customerId) });
-                if (!customerId) throw new NotFoundException('Customer not found');
-
-                updateData.customerId = customerId;
-            }
 
             return await this.addressModel.updateOne({ _id: id }, updateData);
         } catch (error) {
@@ -55,10 +64,10 @@ export class AdressesService {
         }
     }
 
-    async remove(id: string) {
+    async remove(id: string, user: UserDocument) {
         try {
             await this.findOne(id);
-
+            await this.usersModel.updateOne({ _id: user._id }, { $pull: { adresses: new Types.ObjectId(id) } });
             await this.addressModel.deleteOne({ _id: id });
         } catch (error) {
             throw new HttpException(error?.message || 'Internal Server Error', error?.status || 500);
