@@ -1,20 +1,21 @@
+import { MailerService } from '@nestjs-modules/mailer';
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import * as SendGrid from '@sendgrid/mail';
 import { Model, Types } from 'mongoose';
 import { UserDocument } from 'src/auth/users/models/user.schema';
-import { compareHashString, comparePassword, createHashString, hashPassword, resetPasswordUrl } from 'src/common';
-import { BanRepository } from './ban.repository';
-import { AttempDto } from './dto/attempt.dto';
-import { MailRepository } from './mail.repository';
-import { BanDocument } from './models/ban.schema';
-import { OtpDocument } from './models/mail.schema';
-import { TokenDocument } from './models/token.schema';
-
+import { compareHashString, comparePassword, createHashString, hashPassword } from 'src/common';
+import { AttempDto } from '../dto/attempt.dto';
+import { BanDocument } from '../models/ban.schema';
+import { OtpDocument } from '../models/mail.schema';
+import { TokenDocument } from '../models/token.schema';
+import { BanRepository } from '../repositories/ban.repository';
+import { MailRepository } from '../repositories/mail.repository';
 @Injectable()
 export class MailService {
     constructor(
+        private readonly mailerService: MailerService,
         private readonly configService: ConfigService,
         private readonly smsRepository: MailRepository,
         @InjectModel(OtpDocument.name) private otpModel: Model<OtpDocument>,
@@ -25,26 +26,6 @@ export class MailService {
         @InjectModel(UserDocument.name) private userModel: Model<UserDocument>,
     ) {
         SendGrid.setApiKey(this.configService.get<string>('SENDGRID_API_KEY'));
-    }
-
-    async sendOtp(email: string, code: string): Promise<boolean> {
-        try {
-            if (!email) throw new ForbiddenException('Email is required.');
-
-            const emailData = {
-                to: email,
-                subject: 'Email Verification',
-                from: 'muminovmuhammadqodir0@gmail.com',
-                text: 'Verify your email end enjoy free courses.',
-                html: `<h1>Verifivation code : ${code} </h1>`,
-            };
-
-            await SendGrid.send(emailData);
-
-            return true;
-        } catch (error) {
-            throw new BadRequestException(error.message);
-        }
     }
 
     async attepmt({ email, code }: AttempDto): Promise<boolean> {
@@ -168,23 +149,13 @@ export class MailService {
         }
     }
 
-    async sendSecureToken(email: string, token: string) {
-        try {
-            if (!email) throw new ForbiddenException('Email is required.');
-
-            const emailData = {
-                to: email,
-                subject: 'Email Verification',
-                from: 'muminovmuhammadqodir0@gmail.com',
-                text: 'Verify your email end enjoy free courses.',
-                html: `<h1>To reset your password  press  the  👉${resetPasswordUrl + `?token=` + token} </h1>`,
-            };
-
-            await SendGrid.send(emailData);
-
-            return true;
-        } catch (error) {
-            throw new BadRequestException(error.message);
-        }
+    async testEmail(to: string) {
+        await this.mailerService.sendMail({
+            to,
+            subject: 'Your OTP Code',
+            template: './registration',
+            context: { code: 121212, name: 'Bunyodbek' },
+        });
+        return { success: true };
     }
 }

@@ -1,0 +1,38 @@
+<html lang='en'>
+    <head>
+        <meta charset='UTF-8' />
+        <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+        <title>Password Reset Request</title>
+        <style>
+            body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; } .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; } .button { display: inline-block; padding: 10px 15px; margin: 20px 0; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; } .button:hover { background-color: #0056b3; } .footer { margin-top: 20px; font-size: 0.9em; color: #555; }
+        </style>
+    </head>
+    <body>
+        <div class='container'>
+            <p>Dear {{name}},</p>
+
+            <p>We received a request to reset the password for your Elbe Menswear account. If you made this request, please follow the instructions below to reset your password. If you didn’t request a password reset, you can safely ignore this email.</p>
+
+            <p><strong>To reset your password:</strong></p>
+
+            <ol>
+                <li>Click the link below to reset your password:</li>
+                <li><a href='{{url}}' class='button'>Reset Password</a></li>
+                <li>You will be redirected to a secure page where you can enter a new password.</li>
+                <li>After you’ve set your new password, you can log in to your account as usual.</li>
+            </ol>
+
+            <p>For your security, this link will expire in [Timeframe] hours.</p>
+
+            <p>If you encounter any issues or have any concerns, our customer support team is here to help. Please contact us at <a href='mailto:elbemenswear@gmail.com'>elbemenswear@gmail.com</a> or call <a href='tel:+01932848121'>01932848121</a>.</p>
+
+            <p>Thank you for choosing Elbe Menswear. We’re committed to keeping your account secure.</p>
+
+            <p>Warm regards,<br />
+                Customer Service Team<br />
+                Elbe Menswear</p>
+
+            <p class='footer'><strong>P.S.</strong> Remember to choose a strong password that you haven’t used before to keep your account safe.</p>
+        </div>
+    </body>
+</html>

@@ -193,7 +193,7 @@ export class ProductsService {
                         { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
                         { path: 'image', select: { _id: 1, url: 1 } },
                         { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
-                        { path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', select: { _id: 1, url: 1 }, model: UploadDocuemnt.name }] },
+                        { path: 'variants.images', select: { _id: 1, url: 1 }, model: UploadDocuemnt.name },
                     ],
                 },
             )
