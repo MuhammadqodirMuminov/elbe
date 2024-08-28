@@ -3,7 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Types } from 'mongoose';
 import { RandomCodeGenerate, comparePassword, hashPassword } from 'src/common';
-import { MailService } from './../mail/mail.service';
+import { MailSendService } from 'src/mail/services/mailer.service';
+import { MailService } from '../mail/services/mail.service';
 import { SentOtpDto } from './dto/login.dto';
 import { ForgotPasswordDto, ForgotPasswordVerifyDto, ResetPasswordDto } from './dto/password.dto';
 import { RegisterDto, VerifyDto } from './dto/register.dto';
@@ -23,6 +24,7 @@ export class AuthService {
         private readonly jwtService: JwtService,
         private readonly mailService: MailService,
         private readonly usersService: UsersService,
+        private readonly mailerService: MailSendService,
     ) {}
 
     async register(registerDto: RegisterDto) {
@@ -36,7 +38,7 @@ export class AuthService {
             code: +code,
         });
 
-        await this.mailService.sendOtp(registerDto.email, String(code));
+        await this.mailerService.sendOtp(registerDto.email, String(code));
 
         if (!existUser) {
             await this.usersService.createUser({
@@ -83,7 +85,7 @@ export class AuthService {
     async forgotPassword({ email }: ForgotPasswordDto) {
         const secureToken = await this.mailService.generateToken(email);
 
-        const token = await this.mailService.sendSecureToken(email, secureToken);
+        const token = await this.mailerService.sendSecureToken(email, secureToken);
 
         return {
             message: 'Verfication link is sent to your email address',
@@ -179,7 +181,7 @@ export class AuthService {
         try {
             const code = RandomCodeGenerate();
 
-            await this.mailService.sendOtp(body.email, String(code));
+            await this.mailerService.sendOtp(body.email, String(code));
 
             const attepmt = await this.mailService.attepmt({
                 email: body.email,
