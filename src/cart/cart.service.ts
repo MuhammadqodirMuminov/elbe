@@ -6,7 +6,7 @@ import { ProductDocument } from 'src/products/models/product.schema';
 import { ProductsService } from 'src/products/products.service';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { VariantDocument } from 'src/variants/models/variant.schema';
-import { VariantsService } from 'src/variants/variants.service';
+import { VariantsService } from 'src/variants/services/variants.service';
 import { CartRepository } from './cart.repository';
 import { UpdateCartDto } from './dto/create-cart.dto';
 import { CartItemsDocument } from './models/car-item.schema';
@@ -169,6 +169,8 @@ export class CartService {
                 ],
             },
         );
+
+        console.log({ c: userCart.items });
 
         if (userCart.items.length === 0) {
             return { message: 'No recomended producs found' };
