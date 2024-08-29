@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Types } from 'mongoose';
-import { LengthType } from 'src/common';
 
 export class Abttribute {
     @ApiProperty()
@@ -17,37 +16,26 @@ export class Abttribute {
     value: string[];
 }
 
-export class ColorAttribute {
-    @ApiProperty()
-    @IsString()
-    title: string;
-
-    @ApiProperty({ example: 1, type: Number })
-    @IsNumber()
-    priority: number;
-
-    @ApiProperty()
-    @IsString()
-    value: string;
-}
-
 export class CreateVariantDto {
     @ApiProperty({ type: Abttribute, isArray: true })
     @IsArray()
     @IsOptional()
     attributes?: Abttribute[];
 
-    @ApiProperty({ type: ColorAttribute, isArray: true })
-    @IsArray()
-    color: ColorAttribute[];
+    @ApiProperty({ type: String, required: false })
+    @IsString()
+    @IsOptional()
+    color: string;
 
-    @ApiProperty({ type: 'enum', enum: LengthType, example: LengthType.LONG })
-    @IsEnum(LengthType)
-    lenth: LengthType;
+    @ApiProperty({ type: String, required: false })
+    @IsString()
+    @IsOptional()
+    length: string;
 
-    @ApiProperty()
+    @ApiProperty({ type: String, required: true, isArray: true })
     @IsNotEmpty()
-    size: string;
+    @IsArray()
+    size: string[];
 
     @ApiProperty()
     @IsString()

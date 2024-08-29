@@ -1,16 +1,12 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
-import { LengthType } from 'src/common';
-import { Abttribute, ColorAttribute } from './create-variant.dto';
+import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Abttribute } from './create-variant.dto';
 
 export class UpdateVariantDto {
-    @ApiProperty({ type: 'enum', enum: LengthType, example: LengthType.LONG })
-    @IsEnum(LengthType)
-    lenth: LengthType;
-
-    @ApiProperty()
-    @IsNotEmpty()
-    size: string;
+    @ApiProperty({ type: String, isArray: true, required: false })
+    @IsArray()
+    @IsOptional()
+    size: string[];
 
     @ApiProperty()
     @IsString()
@@ -24,14 +20,18 @@ export class UpdateVariantDto {
 
     @ApiProperty()
     @IsNumber()
-    @IsNotEmpty()
+    @IsOptional()
     quantity: number;
 
-    @ApiProperty({ type: String, required: true })
-    @IsMongoId()
-    @IsNotEmpty()
-    productId: string;
+    @ApiProperty({ type: String, required: false })
+    @IsString()
+    @IsOptional()
+    color: string;
+
+    @ApiProperty({ type: String, required: false })
+    @IsString()
+    @IsOptional()
+    length: string;
 }
 
 export class UpdateAttributeDto extends PartialType(Abttribute) {}
-export class UpdateColorDto extends PartialType(ColorAttribute) {}

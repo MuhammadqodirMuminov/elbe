@@ -33,7 +33,7 @@ export class ProductDocument extends AbstractDocument {
     image: Types.ObjectId;
 
     @Prop([{ type: Types.ObjectId, required: true, ref: VariantDocument.name }])
-    variants: VariantDocument[];
+    variants: Types.ObjectId[];
 
     @Prop({ type: Types.ObjectId, required: false, ref: Discount.name })
     discounts?: Discount[];

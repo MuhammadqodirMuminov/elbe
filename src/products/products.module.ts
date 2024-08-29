@@ -5,6 +5,7 @@ import { CategoryDocument, CategorySchema } from 'src/categories/models/category
 import { CollectionsModule } from 'src/collections/collections.module';
 import { DatabaseModule } from 'src/database/database.module';
 import { UploadModule } from 'src/upload/upload.module';
+import { VariantDocument, VariantSchema } from 'src/variants/models/variant.schema';
 import { VariantsModule } from 'src/variants/variants.module';
 import { ProductDocument, ProductSchema } from './models/product.schema';
 import { ProductsController } from './products.controller';
@@ -21,6 +22,7 @@ import { ProductsService } from './products.service';
         DatabaseModule.forFeature([
             { name: ProductDocument.name, schema: ProductSchema },
             { name: CategoryDocument.name, schema: CategorySchema },
+            { name: VariantDocument.name, schema: VariantSchema },
         ]),
         forwardRef(() => VariantsModule),
     ],

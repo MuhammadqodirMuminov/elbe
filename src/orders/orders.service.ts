@@ -11,7 +11,7 @@ import { OrderStatus } from 'src/common';
 import { PaymentDocuemnt } from 'src/payment/models/payment.schema';
 import { QueryProductDto } from 'src/products/dto/query.dto';
 import { ProductsService } from 'src/products/products.service';
-import { VariantsService } from 'src/variants/variants.service';
+import { VariantsService } from 'src/variants/services/variants.service';
 import { OrderDocument } from './models/order.schema';
 
 @Injectable()
