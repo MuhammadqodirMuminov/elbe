@@ -36,3 +36,9 @@ export enum ProductSortTypes {
     BESTSELLERS = 'BESTSELLERS',
     OFFERS = 'OFFERS',
 }
+
+export enum LengthType {
+    SHORT = 'SHORT',
+    REGULAR = 'REGULAR',
+    LONG = 'LONG',
+}

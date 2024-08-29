@@ -5,9 +5,9 @@ import { ProductDocument } from 'src/products/models/product.schema';
 import { ProductsService } from 'src/products/products.service';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { UploadService } from 'src/upload/upload.service';
-import { AddImageDto, CreateVariantDto } from './dto/create-variant.dto';
-import { UpdateVariantDto } from './dto/update-variant.dto';
-import { VariantDocument } from './models/variant.schema';
+import { VariantDocument } from 'src/variants/models/variant.schema';
+import { Abttribute, AddImageDto, ColorAttribute, CreateVariantDto } from './dto/create-variant.dto';
+import { UpdateAttributeDto, UpdateColorDto, UpdateVariantDto } from './dto/update-variant.dto';
 
 @Injectable()
 export class VariantsService {
@@ -126,5 +126,83 @@ export class VariantsService {
         } catch (error) {
             throw new HttpException(error?.message || 'Internal Server error', error?.status || 500);
         }
+    }
+
+    async addAttribute(varantId: string, addAttributeDto: Abttribute) {
+        const existVariant = await this.findOne(varantId);
+
+        await this.variantModel.updateOne({ _id: existVariant._id }, { $push: { attributes: addAttributeDto } });
+
+        return await this.findOne(varantId);
+    }
+
+    async removeAttribute(varantId: string, attributeId: string) {
+        const variant = await this.findOne(varantId);
+
+        await this.variantModel.updateOne({ _id: variant._id }, { $pull: { attributes: { _id: new Types.ObjectId(attributeId) } } });
+
+        return await this.findOne(varantId);
+    }
+
+    async updateAttribute(variantId: string, attributeId: string, body: UpdateAttributeDto) {
+        const variant = await this.findOne(variantId);
+
+        const attr = variant.attributes.find((a: any) => a._id.toString() === attributeId);
+        if (!attr) {
+            throw new NotFoundException('Attribute is not found!');
+        }
+
+        await this.variantModel.updateOne(
+            { _id: variant._id, 'attributes._id': new Types.ObjectId(attributeId) },
+            {
+                $set: {
+                    'attributes.$.title': body.title,
+                    'attributes.$.priority': body.priority,
+                    'attributes.$.value': body.value,
+                },
+            },
+        );
+
+        return await this.findOne(variantId);
+    }
+
+    async addColor(variantId: string, body: ColorAttribute) {
+        const variant = await this.findOne(variantId);
+
+        await this.variantModel.updateOne({ _id: variant._id }, { $push: { color: body } });
+
+        return await this.findOne(variantId);
+    }
+
+    async updateColor(variantId: string, colorId: string, updateColorDto: UpdateColorDto) {
+        await this.validateVariant(variantId, colorId);
+
+        await this.variantModel.updateOne(
+            { _id: variantId, 'color._id': new Types.ObjectId(colorId) },
+            {
+                $set: {
+                    'color.$.title': updateColorDto.title,
+                    'color.$.priority': updateColorDto.priority,
+                    'color.$.value': updateColorDto.value,
+                },
+            },
+        );
+
+        return await this.findOne(variantId);
+    }
+
+    async removeColor(variantId: string, colorId: string) {
+        await this.validateVariant(variantId, colorId);
+
+        await this.variantModel.updateOne({ _id: variantId }, { $pull: { color: { _id: new Types.ObjectId(colorId) } } });
+
+        return await this.findOne(variantId);
+    }
+
+    protected async validateVariant(variantId: string, colorId: string): Promise<void> {
+        const variant = await this.findOne(variantId);
+
+        const color = variant?.color?.find((c: any) => c._id.toString() === colorId);
+        if (!color) throw new NotFoundException('color not found!');
     }
 }
