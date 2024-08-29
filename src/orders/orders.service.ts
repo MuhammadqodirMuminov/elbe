@@ -87,7 +87,7 @@ export class OrdersService {
             const product = await this.productService.findOne(variant.productId._id.toString());
 
             await this.productService.updateWithQuery({ _id: variant.productId._id }, { $inc: { sold_amount: item.quantity } });
-            await this.cartItemModel.updateOne({ _id: item._id }, { price: (product?.price + variant?.price || 0) * item.quantity });
+            await this.cartItemModel.updateOne({ _id: item._id }, { price: product?.price * item.quantity });
         });
 
         await this.cartService.update(cart._id.toString(), { is_order_created: true });
