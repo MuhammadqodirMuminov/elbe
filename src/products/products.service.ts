@@ -10,6 +10,7 @@ import { CollectionType, ProductSortTypes } from 'src/common';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { UploadService } from 'src/upload/upload.service';
 import { LengthDocument } from 'src/variants/models/length.schema';
+import { SizesDocument } from 'src/variants/models/sizes.schema';
 import { VariantDocument } from 'src/variants/models/variant.schema';
 import { VariantsService } from 'src/variants/services/variants.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -112,7 +113,6 @@ export class ProductsService {
                     { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
                     { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
                     { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
-
                     {
                         path: 'variants',
                         model: VariantDocument.name,
@@ -129,6 +129,11 @@ export class ProductsService {
                             {
                                 path: 'length',
                                 model: LengthDocument.name,
+                            },
+                            {
+                                path: 'size',
+                                model: SizesDocument.name,
+                                populate: [{ path: 'size_guide', model: UploadDocuemnt.name }],
                             },
                         ],
                     },
@@ -177,6 +182,11 @@ export class ProductsService {
                                 path: 'length',
                                 model: LengthDocument.name,
                             },
+                            {
+                                path: 'size',
+                                model: SizesDocument.name,
+                                populate: [{ path: 'size_guide', model: UploadDocuemnt.name }],
+                            },
                         ],
                     },
                 ])
@@ -204,8 +214,31 @@ export class ProductsService {
                     { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
                     { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
                     { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
+                    {
+                        path: 'variants',
+                        model: VariantDocument.name,
+                        populate: [
+                            {
+                                path: 'color',
+                                select: { _id: 1, title: 1, value: 1, value2: 1 },
+                            },
+                            {
+                                path: 'images',
+                                model: UploadDocuemnt.name,
+                                select: { _id: 1, url: 1 },
+                            },
+                            {
+                                path: 'length',
+                                model: LengthDocument.name,
+                            },
+                            {
+                                path: 'size',
+                                model: SizesDocument.name,
+                                populate: [{ path: 'size_guide', model: UploadDocuemnt.name }],
+                            },
+                        ],
+                    },
                 ])
-                .populate([{ path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } }] }])
                 .exec();
 
             total = await this.productModel.countDocuments({ brand: new Types.ObjectId(collection.brand) }).exec();
@@ -265,7 +298,30 @@ export class ProductsService {
                         { path: 'image', select: { _id: 1, url: 1 } },
                         { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
 
-                        { path: 'variants.images', select: { _id: 1, url: 1 }, model: UploadDocuemnt.name },
+                        {
+                            path: 'variants',
+                            model: VariantDocument.name,
+                            populate: [
+                                {
+                                    path: 'color',
+                                    select: { _id: 1, title: 1, value: 1, value2: 1 },
+                                },
+                                {
+                                    path: 'images',
+                                    model: UploadDocuemnt.name,
+                                    select: { _id: 1, url: 1 },
+                                },
+                                {
+                                    path: 'length',
+                                    model: LengthDocument.name,
+                                },
+                                {
+                                    path: 'size',
+                                    model: SizesDocument.name,
+                                    populate: [{ path: 'size_guide', model: UploadDocuemnt.name }],
+                                },
+                            ],
+                        },
                     ],
                 },
             )
