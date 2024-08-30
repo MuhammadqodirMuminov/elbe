@@ -32,8 +32,8 @@ export class CreateVariantDto {
     @IsOptional()
     length: string;
 
-    @ApiProperty({ type: String, required: true, isArray: true })
-    @IsNotEmpty()
+    @ApiProperty({ type: String, required: false, isArray: true })
+    @IsOptional()
     @IsArray()
     size: string[];
 

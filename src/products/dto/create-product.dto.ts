@@ -32,4 +32,9 @@ export class CreateProductDto {
     @IsMongoId()
     @IsNotEmpty()
     image: string;
+
+    @ApiProperty({ type: String, required: false })
+    @IsOptional()
+    @IsString()
+    size_guide?: string;
 }

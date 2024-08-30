@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
+import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, QueryOptions, Types, UpdateQuery, UpdateWithAggregationPipeline } from 'mongoose';
 import { BrandsService } from 'src/brands/brands.service';
@@ -33,14 +33,24 @@ export class ProductsService {
         private readonly categoryService: CategoriesService,
     ) {}
 
+    // this is create a new ProductDocument
     async create(body: CreateProductDto): Promise<ProductDocument> {
         try {
+            // find the category
             await this.categoryRepository.findOne({ _id: body.category });
 
+            // find the brand
             const brand = await this.brandService.findOne(body.brand.toString());
 
+            // find the image
             const images = (await this.uploadService.findOne(body.image.toString()))._id;
 
+            // check if the size_guide exists and find its id if it does
+            if (body.size_guide) {
+                await this.uploadService.findOne(body.size_guide.toString());
+            }
+
+            // create the new product document and save it to the database
             const createdProduct = await this.productRepository.create({
                 ...body,
                 category: new Types.ObjectId(body.category),
@@ -48,6 +58,7 @@ export class ProductsService {
                 image: images,
                 variants: [],
                 sold_amount: 0,
+                size_guide: body.size_guide ? new Types.ObjectId(body.size_guide) : null,
             });
 
             return createdProduct;
@@ -85,8 +96,6 @@ export class ProductsService {
         const sort = this.generateSortData(sortBy);
         const queryFilter = await this.createProductsFilterQuery(query);
 
-        console.log(queryFilter);
-
         const variantIds = (await this.variantModel.find(queryFilter)).map((v) => v._id);
 
         const productFilter = {};
@@ -109,6 +118,7 @@ export class ProductsService {
                     { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
                     { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
                     { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
+                    { path: 'size_guide', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
                     {
                         path: 'variants',
                         model: VariantDocument.name,
@@ -155,6 +165,7 @@ export class ProductsService {
                     { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
                     { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
                     { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
+                    { path: 'size_guide', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
                     {
                         path: 'variants',
                         model: VariantDocument.name,
@@ -199,6 +210,7 @@ export class ProductsService {
                     { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
                     { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
                     { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
+                    { path: 'size_guide', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
                 ])
                 .populate([{ path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } }] }])
                 .exec();
@@ -259,6 +271,7 @@ export class ProductsService {
                         { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
                         { path: 'image', select: { _id: 1, url: 1 } },
                         { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
+                        { path: 'size_guide', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
                         { path: 'variants.images', select: { _id: 1, url: 1 }, model: UploadDocuemnt.name },
                     ],
                 },
@@ -272,6 +285,7 @@ export class ProductsService {
             { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
             { path: 'image', select: { _id: 1, url: 1 } },
             { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
+            { path: 'size_guide', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
             { path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', select: { _id: 1, url: 1 }, model: UploadDocuemnt.name }] },
         ]);
 
@@ -297,6 +311,12 @@ export class ProductsService {
             const images = (await this.uploadService.findOne(body.image.toString()))._id;
             updatedData.image = images;
             await this.uploadService.deleteMedia(product.image.toString());
+        }
+
+        if (body.size_guide) {
+            const sizeGuide = (await this.uploadService.findOne(body.size_guide.toString()))._id;
+            updatedData.size_guide = sizeGuide;
+            await this.uploadService.deleteMedia(product.size_guide.toString());
         }
 
         const updatedProduct = await this.productModel.findByIdAndUpdate(id, body, { new: true }).exec();
