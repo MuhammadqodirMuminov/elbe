@@ -25,6 +25,11 @@ export class SizesController {
         return this.sizesService.findAll();
     }
 
+    @Get('sizes-by-productId/:productId')
+    async getCategoryById(@Param('productId') productId: string) {
+        return this.sizesService.getByProductId(productId);
+    }
+
     @Get(':id')
     @ApiOperation({ summary: 'Get size by ID' })
     @ApiResponse({ status: 200, description: 'Size details.', type: SizesDocument })
