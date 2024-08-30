@@ -39,6 +39,9 @@ export class VariantDocument extends AbstractDocument {
     @Prop({ type: String, required: true, ref: SizesDocument.name })
     size: Types.ObjectId;
 
+    @Prop({ type: [String], required: false })
+    availableSizes: string[];
+
     @Prop({
         type: [{ type: Types.ObjectId, required: true, ref: LengthDocument.name }],
         required: false,
