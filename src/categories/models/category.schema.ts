@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Types } from 'mongoose';
 import { AbstractDocument } from 'src/database/abstract.schema';
-import { ProductDocument } from 'src/products/models/product.schema';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 
 @Schema({ versionKey: false, timestamps: true })
@@ -21,7 +20,7 @@ export class CategoryDocument extends AbstractDocument {
     @Prop({ type: Types.ObjectId, ref: UploadDocuemnt.name })
     image: Types.ObjectId;
 
-    @Prop({ type: [{ type: Types.ObjectId, ref: ProductDocument.name }], default: [] })
+    @Prop({ type: [{ type: Types.ObjectId, ref: 'ProductDocument' }], default: [] })
     products?: Types.ObjectId[];
 }
 

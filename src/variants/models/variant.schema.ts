@@ -4,6 +4,7 @@ import { AbstractDocument } from 'src/database/abstract.schema';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { ColorDocument } from './color.schema';
 import { LengthDocument } from './length.schema';
+import { SizesDocument } from './sizes.schema';
 
 @Schema({ versionKey: false, timestamps: true })
 export class VariantDocument extends AbstractDocument {
@@ -26,9 +27,6 @@ export class VariantDocument extends AbstractDocument {
     })
     color: Types.ObjectId;
 
-    @Prop({ type: [String] })
-    size: string[];
-
     @Prop({ type: String, required: true, index: true })
     sku: string;
 
@@ -37,6 +35,9 @@ export class VariantDocument extends AbstractDocument {
 
     @Prop({ type: Number, required: false })
     quantity: number;
+
+    @Prop({ type: String, required: true, ref: SizesDocument.name })
+    size: Types.ObjectId;
 
     @Prop({
         type: [{ type: Types.ObjectId, required: true, ref: LengthDocument.name }],
