@@ -428,8 +428,19 @@ export class ProductsService {
                 $in: [].concat(
                     ...(await Promise.all(
                         (validatedFilterQuery.categoryId as string[]).map(async (c) => {
-                            const childs = await this.categoryService.getChildByParentId(c);
-                            return childs.map((ci) => new Types.ObjectId(ci._id));
+                            let allCtg: Types.ObjectId[] = [];
+
+                            const isChild = await this.categoryService.isChildCategory(c);
+                            if (isChild) {
+                                allCtg.push(new Types.ObjectId(c));
+                            } else {
+                                const childs = await this.categoryService.getChildByParentId(c);
+                                childs.forEach((ci) => {
+                                    allCtg.push(new Types.ObjectId(ci._id));
+                                });
+                            }
+
+                            return allCtg;
                         }),
                     )),
                 ),
@@ -445,7 +456,7 @@ export class ProductsService {
         }
 
         if (query.size && query.size.length > 0) {
-            queryFilter['size'] = { $in: validatedFilterQuery.size };
+            queryFilter['availableSizes'] = { $in: validatedFilterQuery.size };
         }
 
         if (query.color && query.color.length > 0) {
