@@ -25,6 +25,11 @@ export class ColorController {
         return this.colorService.findAll();
     }
 
+    @Get(':id')
+    async getOne(@Param('id') id: string) {
+        return await this.colorService.findOne(id);
+    }
+
     @Patch(':id')
     @ApiOperation({ summary: 'Update a color by ID' })
     @ApiParam({ name: 'id', description: 'Color ID' })
