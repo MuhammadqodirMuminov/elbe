@@ -19,6 +19,7 @@ import { StripeModule } from './stripe/stripe.module';
 import { UploadModule } from './upload/upload.module';
 import { VariantsModule } from './variants/variants.module';
 import { WishlistsModule } from './wishlists/wishlists.module';
+import { GiftsModule } from './gifts/gifts.module';
 
 @Module({
     imports: [
@@ -60,6 +61,7 @@ import { WishlistsModule } from './wishlists/wishlists.module';
         CollectionsModule,
         StripeModule,
         WishlistsModule,
+        GiftsModule,
     ],
 })
 export class AppModule {}
