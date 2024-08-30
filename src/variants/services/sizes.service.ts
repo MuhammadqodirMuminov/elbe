@@ -3,6 +3,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CategoriesService } from 'src/categories/categories.service';
+import { ProductDocument } from 'src/products/models/product.schema';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { CreateSizeDto } from '../dto/size/create.dto';
 import { UpdateSizeDto } from '../dto/size/update.dto';
@@ -12,6 +13,7 @@ import { SizesDocument } from '../models/sizes.schema';
 export class SizesService {
     constructor(
         @InjectModel(SizesDocument.name) private sizesModel: Model<SizesDocument>,
+        @InjectModel(ProductDocument.name) private productmodel: Model<ProductDocument>,
         private readonly categoryService: CategoriesService,
     ) {}
 
@@ -57,6 +59,15 @@ export class SizesService {
             throw new NotFoundException(`Size with ID ${id} not found`);
         }
         return size;
+    }
+
+    async getByProductId(productId: string) {
+        const product = await this.productmodel.findOne({ _id: productId }, {}, { populate: [{ path: 'category' }] });
+
+        const categoryId = (product.category as any).parent_id;
+
+        const size = await this.sizesModel.findOne({ category: categoryId });
+        return size ? size : {};
     }
 
     async update(id: string, updateSizeDto: UpdateSizeDto): Promise<SizesDocument> {
