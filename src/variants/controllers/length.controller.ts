@@ -25,6 +25,11 @@ export class LengthController {
         return this.lengthService.findAll();
     }
 
+    @Get(':id')
+    async getOne(@Param('id') id: string) {
+        return await this.lengthService.findOne(id);
+    }
+
     @Patch(':id')
     @ApiOperation({ summary: 'Update a length by ID' })
     @ApiParam({ name: 'id', description: 'Length ID' })
