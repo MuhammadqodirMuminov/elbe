@@ -168,4 +168,12 @@ export class CategoriesService {
         if (!existCategory) throw new NotFoundException('Category not found');
         return existCategory;
     }
+
+    async isChildCategory(id: string): Promise<boolean> {
+        const category = await this.getOne(id);
+        if (category.parent_id !== null) {
+            return true;
+        }
+        return false;
+    }
 }
