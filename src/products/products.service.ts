@@ -314,9 +314,11 @@ export class ProductsService {
         }
 
         if (body.size_guide) {
-            const sizeGuide = (await this.uploadService.findOne(body.size_guide.toString()))._id;
+            const sizeGuide = (await this.uploadService.findOne(body.size_guide))._id;
             updatedData.size_guide = sizeGuide;
-            await this.uploadService.deleteMedia(product.size_guide.toString());
+            if (product.size_guide) {
+                await this.uploadService.deleteMedia(product.size_guide.toString());
+            }
         }
 
         const updatedProduct = await this.productModel.findByIdAndUpdate(id, body, { new: true }).exec();
