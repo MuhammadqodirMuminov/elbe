@@ -45,11 +45,6 @@ export class ProductsService {
             // find the image
             const images = (await this.uploadService.findOne(body.image.toString()))._id;
 
-            // check if the size_guide exists and find its id if it does
-            if (body.size_guide) {
-                await this.uploadService.findOne(body.size_guide.toString());
-            }
-
             // create the new product document and save it to the database
             const createdProduct = await this.productRepository.create({
                 ...body,
@@ -58,7 +53,6 @@ export class ProductsService {
                 image: images,
                 variants: [],
                 sold_amount: 0,
-                size_guide: body.size_guide ? new Types.ObjectId(body.size_guide) : null,
             });
 
             return createdProduct;
@@ -118,7 +112,7 @@ export class ProductsService {
                     { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
                     { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
                     { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
-                    { path: 'size_guide', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
+
                     {
                         path: 'variants',
                         model: VariantDocument.name,
@@ -165,7 +159,7 @@ export class ProductsService {
                     { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
                     { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
                     { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
-                    { path: 'size_guide', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
+
                     {
                         path: 'variants',
                         model: VariantDocument.name,
@@ -210,7 +204,6 @@ export class ProductsService {
                     { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
                     { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
                     { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
-                    { path: 'size_guide', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
                 ])
                 .populate([{ path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } }] }])
                 .exec();
@@ -271,7 +264,7 @@ export class ProductsService {
                         { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
                         { path: 'image', select: { _id: 1, url: 1 } },
                         { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
-                        { path: 'size_guide', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
+
                         { path: 'variants.images', select: { _id: 1, url: 1 }, model: UploadDocuemnt.name },
                     ],
                 },
@@ -285,7 +278,7 @@ export class ProductsService {
             { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
             { path: 'image', select: { _id: 1, url: 1 } },
             { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
-            { path: 'size_guide', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
+
             { path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', select: { _id: 1, url: 1 }, model: UploadDocuemnt.name }] },
         ]);
 
@@ -311,14 +304,6 @@ export class ProductsService {
             const images = (await this.uploadService.findOne(body.image.toString()))._id;
             updatedData.image = images;
             await this.uploadService.deleteMedia(product.image.toString());
-        }
-
-        if (body.size_guide) {
-            const sizeGuide = (await this.uploadService.findOne(body.size_guide))._id;
-            updatedData.size_guide = sizeGuide;
-            if (product.size_guide) {
-                await this.uploadService.deleteMedia(product.size_guide.toString());
-            }
         }
 
         const updatedProduct = await this.productModel.findByIdAndUpdate(id, body, { new: true }).exec();

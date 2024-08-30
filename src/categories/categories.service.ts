@@ -129,6 +129,15 @@ export class CategoriesService {
         return { ...JSON.parse(JSON.stringify(category)), products: products };
     }
 
+    async getOne(id: string) {
+        const category = await this.categoryModel.findOne({ _id: id });
+
+        if (!category) {
+            throw new NotFoundException('Category not found');
+        }
+        return category;
+    }
+
     async update(_id: string, updateCategoryDto: UpdateCategoryDto) {
         const existCategory = await this.categoryModel.findOne({ _id, isActive: true });
 
