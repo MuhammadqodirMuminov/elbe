@@ -23,9 +23,6 @@ export class ProductDocument extends AbstractDocument {
     @Prop({ type: Boolean, required: false, default: false })
     isOnOffer?: boolean;
 
-    @Prop({ type: String, required: false })
-    size_guide?: Types.ObjectId;
-
     @Prop({ type: Types.ObjectId, required: false, ref: BrandDocument.name })
     brand?: Types.ObjectId;
 

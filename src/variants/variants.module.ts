@@ -1,21 +1,26 @@
 import { Module, forwardRef } from '@nestjs/common';
+import { CategoriesModule } from 'src/categories/categories.module';
 import { DatabaseModule } from 'src/database/database.module';
 import { ProductDocument, ProductSchema } from 'src/products/models/product.schema';
 import { ProductsModule } from 'src/products/products.module';
 import { UploadModule } from 'src/upload/upload.module';
 import { ColorController } from './controllers/color.controller';
 import { LengthController } from './controllers/length.controller';
+import { SizesController } from './controllers/sizes.controller';
 import { VariantsController } from './controllers/variants.controller';
 import { ColorDocument, colorSchema } from './models/color.schema';
 import { LengthDocument, lengthSchema } from './models/length.schema';
+import { SizesDocument, sizesSchema } from './models/sizes.schema';
 import { VariantDocument, VariantSchema } from './models/variant.schema';
 import { ColorService } from './services/color.service';
 import { LengthService } from './services/length.service';
+import { SizesService } from './services/sizes.service';
 import { VariantsService } from './services/variants.service';
 
 @Module({
     imports: [
         forwardRef(() => ProductsModule),
+        CategoriesModule,
         UploadModule,
         DatabaseModule,
         DatabaseModule.forFeature([
@@ -23,10 +28,11 @@ import { VariantsService } from './services/variants.service';
             { name: ProductDocument.name, schema: ProductSchema },
             { name: ColorDocument.name, schema: colorSchema },
             { name: LengthDocument.name, schema: lengthSchema },
+            { name: SizesDocument.name, schema: sizesSchema },
         ]),
     ],
-    controllers: [VariantsController, ColorController, LengthController],
-    providers: [VariantsService, ColorService, LengthService],
-    exports: [VariantsService, ColorService, LengthService],
+    controllers: [VariantsController, ColorController, LengthController, SizesController],
+    providers: [VariantsService, ColorService, LengthService, SizesService],
+    exports: [VariantsService, ColorService, LengthService, SizesService],
 })
 export class VariantsModule {}
