@@ -23,6 +23,13 @@ export class SizesService {
         if (category.parent_id !== null) {
             throw new BadRequestException('Only Parent category is supported');
         }
+
+        const existCategory = await this.sizesModel.findOne({ category: category._id });
+
+        if (existCategory) {
+            throw new BadRequestException('Category already exists');
+        }
+
         const newSize = new this.sizesModel({ ...createSizeDto, category: category._id, _id: new Types.ObjectId() });
         return newSize.save();
     }
