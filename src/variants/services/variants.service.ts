@@ -10,8 +10,10 @@ import { Abttribute, AddImageDto, CreateVariantDto } from '../dto/create-variant
 import { UpdateAttributeDto, UpdateVariantDto } from '../dto/update-variant.dto';
 import { ColorDocument } from '../models/color.schema';
 import { LengthDocument } from '../models/length.schema';
+import { SizesDocument } from '../models/sizes.schema';
 import { ColorService } from './color.service';
 import { LengthService } from './length.service';
+import { SizesService } from './sizes.service';
 
 @Injectable()
 export class VariantsService {
@@ -22,6 +24,7 @@ export class VariantsService {
         private readonly productsService: ProductsService,
         private readonly colorService: ColorService,
         private readonly lengthService: LengthService,
+        private readonly sizesService: SizesService,
     ) {}
 
     // create a new variant
@@ -46,6 +49,7 @@ export class VariantsService {
                 _id: new Types.ObjectId(),
                 color: new Types.ObjectId(createVariantDto.color),
                 length: new Types.ObjectId(createVariantDto.length),
+                size: new Types.ObjectId(createVariantDto.size),
             });
 
             // update product add new variantId to product.variants
@@ -102,6 +106,16 @@ export class VariantsService {
                             path: 'length',
                             model: LengthDocument.name,
                         },
+                        {
+                            path: 'size',
+                            model: SizesDocument.name,
+                            populate: [
+                                {
+                                    path: 'size_guide',
+                                    model: UploadDocuemnt.name,
+                                },
+                            ],
+                        },
                     ],
                 },
             );
@@ -122,6 +136,16 @@ export class VariantsService {
                     { path: 'productId', model: ProductDocument.name, select: { _id: 1, name: 1 } },
                     { path: 'color', model: ColorDocument.name, select: { _id: 1, title: 1, value: 1, value2: 1 } },
                     { path: 'length', model: LengthDocument.name, select: { _id: 1, key: 1, value: 1 } },
+                    {
+                        path: 'size',
+                        model: SizesDocument.name,
+                        populate: [
+                            {
+                                path: 'size_guide',
+                                model: UploadDocuemnt.name,
+                            },
+                        ],
+                    },
                 ],
             },
         );
@@ -162,7 +186,7 @@ export class VariantsService {
             const updatedData: Record<string, any> = { ...updateVariantDto };
 
             // find the variant
-            const variant = await this.findOne(id);
+            await this.findOne(id);
 
             // update variant color
             if (updateVariantDto.color) {
@@ -176,8 +200,29 @@ export class VariantsService {
                 updatedData.length = legnth._id;
             }
 
+            // update variant size
+            if (updateVariantDto.size) {
+                const size = await this.sizesService.findOne(updateVariantDto.size);
+                updatedData.size = size._id;
+            }
+
+            // update variant quantity
+            if (updateVariantDto.quantity) {
+                updatedData.quantity = updateVariantDto.quantity;
+            }
+
+            // update variant sku
+            if (updateVariantDto.sku) {
+                updatedData.sku = updateVariantDto.sku;
+            }
+
+            // update variant barcode
+            if (updateVariantDto.barcode) {
+                updatedData.barcode = updateVariantDto.barcode;
+            }
+
             // update the variant with updated body data
-            const data = await this.variantModel.updateOne({ _id: id }, updatedData);
+            await this.variantModel.updateOne({ _id: id }, updatedData);
 
             return await this.findOne(id);
         } catch (error) {

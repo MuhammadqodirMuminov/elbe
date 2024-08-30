@@ -1,12 +1,12 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 import { Abttribute } from './create-variant.dto';
 
 export class UpdateVariantDto {
-    @ApiProperty({ type: String, isArray: true, required: false })
-    @IsArray()
+    @ApiProperty({ type: String })
+    @IsString()
     @IsOptional()
-    size: string[];
+    size: string;
 
     @ApiProperty()
     @IsString()
