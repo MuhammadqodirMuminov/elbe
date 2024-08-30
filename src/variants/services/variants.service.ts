@@ -202,23 +202,8 @@ export class VariantsService {
 
             // update variant size
             if (updateVariantDto.size) {
-                const size = await this.sizesService.findOne(updateVariantDto.size);
-                updatedData.size = size._id;
-            }
-
-            // update variant quantity
-            if (updateVariantDto.quantity) {
-                updatedData.quantity = updateVariantDto.quantity;
-            }
-
-            // update variant sku
-            if (updateVariantDto.sku) {
-                updatedData.sku = updateVariantDto.sku;
-            }
-
-            // update variant barcode
-            if (updateVariantDto.barcode) {
-                updatedData.barcode = updateVariantDto.barcode;
+                const sizeD = await this.sizesService.findOne(updateVariantDto.size);
+                updatedData.size = new Types.ObjectId(sizeD._id);
             }
 
             // update the variant with updated body data
