@@ -9,14 +9,13 @@ import { CollectionsService } from 'src/collections/collections.service';
 import { CollectionType, ProductSortTypes } from 'src/common';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { UploadService } from 'src/upload/upload.service';
-import { LengthDocument } from 'src/variants/models/length.schema';
-import { SizesDocument } from 'src/variants/models/sizes.schema';
 import { VariantDocument } from 'src/variants/models/variant.schema';
 import { VariantsService } from 'src/variants/services/variants.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductDocument } from './models/product.schema';
+import { populatedCostants } from './products.constants';
 import { ProductRepository } from './products.repository';
 
 @Injectable()
@@ -109,35 +108,7 @@ export class ProductsService {
                 .sort(sort)
                 .skip((+page - 1) * +limit)
                 .limit(Number(limit))
-                .populate([
-                    { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
-                    { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
-                    { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
-                    {
-                        path: 'variants',
-                        model: VariantDocument.name,
-                        populate: [
-                            {
-                                path: 'color',
-                                select: { _id: 1, title: 1, value: 1, value2: 1 },
-                            },
-                            {
-                                path: 'images',
-                                model: UploadDocuemnt.name,
-                                select: { _id: 1, url: 1 },
-                            },
-                            {
-                                path: 'length',
-                                model: LengthDocument.name,
-                            },
-                            {
-                                path: 'size',
-                                model: SizesDocument.name,
-                                populate: [{ path: 'size_guide', model: UploadDocuemnt.name }],
-                            },
-                        ],
-                    },
-                ])
+                .populate(populatedCostants)
                 .exec(),
             await this.productModel.countDocuments(queryFilter).exec(),
         ]);
@@ -160,36 +131,7 @@ export class ProductsService {
                 .sort(sort)
                 .skip((+page - 1) * +limit)
                 .limit(Number(limit))
-                .populate([
-                    { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
-                    { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
-                    { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
-
-                    {
-                        path: 'variants',
-                        model: VariantDocument.name,
-                        populate: [
-                            {
-                                path: 'color',
-                                select: { _id: 1, title: 1, value: 1, value2: 1 },
-                            },
-                            {
-                                path: 'images',
-                                model: UploadDocuemnt.name,
-                                select: { _id: 1, url: 1 },
-                            },
-                            {
-                                path: 'length',
-                                model: LengthDocument.name,
-                            },
-                            {
-                                path: 'size',
-                                model: SizesDocument.name,
-                                populate: [{ path: 'size_guide', model: UploadDocuemnt.name }],
-                            },
-                        ],
-                    },
-                ])
+                .populate(populatedCostants)
                 .exec(),
             await this.productModel.countDocuments(queryFilter).exec(),
         ]);
@@ -210,35 +152,7 @@ export class ProductsService {
                 .find()
                 .skip((+page - 1) * +limit)
                 .limit(Number(limit))
-                .populate([
-                    { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
-                    { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
-                    { path: 'image', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
-                    {
-                        path: 'variants',
-                        model: VariantDocument.name,
-                        populate: [
-                            {
-                                path: 'color',
-                                select: { _id: 1, title: 1, value: 1, value2: 1 },
-                            },
-                            {
-                                path: 'images',
-                                model: UploadDocuemnt.name,
-                                select: { _id: 1, url: 1 },
-                            },
-                            {
-                                path: 'length',
-                                model: LengthDocument.name,
-                            },
-                            {
-                                path: 'size',
-                                model: SizesDocument.name,
-                                populate: [{ path: 'size_guide', model: UploadDocuemnt.name }],
-                            },
-                        ],
-                    },
-                ])
+                .populate(populatedCostants)
                 .exec();
 
             total = await this.productModel.countDocuments({ brand: new Types.ObjectId(collection.brand) }).exec();
@@ -262,7 +176,7 @@ export class ProductsService {
     }
 
     async findOne(id: string): Promise<ProductDocument> {
-        const product = await this.productModel.findById(id, {}, { populate: [{ path: 'category' }] }).exec();
+        const product = await this.productModel.findById(id, {}, { populate: populatedCostants }).exec();
         if (!product) {
             throw new NotFoundException('Product not found');
         }
@@ -293,36 +207,7 @@ export class ProductsService {
                 id,
                 {},
                 {
-                    populate: [
-                        { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
-                        { path: 'image', select: { _id: 1, url: 1 } },
-                        { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
-
-                        {
-                            path: 'variants',
-                            model: VariantDocument.name,
-                            populate: [
-                                {
-                                    path: 'color',
-                                    select: { _id: 1, title: 1, value: 1, value2: 1 },
-                                },
-                                {
-                                    path: 'images',
-                                    model: UploadDocuemnt.name,
-                                    select: { _id: 1, url: 1 },
-                                },
-                                {
-                                    path: 'length',
-                                    model: LengthDocument.name,
-                                },
-                                {
-                                    path: 'size',
-                                    model: SizesDocument.name,
-                                    populate: [{ path: 'size_guide', model: UploadDocuemnt.name }],
-                                },
-                            ],
-                        },
-                    ],
+                    populate: populatedCostants,
                 },
             )
             .exec();
