@@ -65,7 +65,7 @@ export class SizeGuideService {
 
         const updatedBody: Record<string, any> = { ...updateSizeGuideDto };
         if (updateSizeGuideDto.length) {
-            const length = await this.uploadService.findOne(updateSizeGuideDto.length);
+            const length = await this.lengthService.findOne(updateSizeGuideDto.length);
             updatedBody.length = length._id;
         }
 
