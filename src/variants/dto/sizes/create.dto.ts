@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { ArrayMinSize, ArrayNotEmpty, IsArray, IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateSizeDto {
@@ -14,10 +14,11 @@ export class CreateSizeDto {
     @ArrayMinSize(1)
     value: string[];
 
-    @ApiPropertyOptional({ description: 'Size guide ID', example: '64f0a74e4e3e5f001d3c58b7' })
-    @IsMongoId()
+    @ApiProperty({ description: 'Size guide ID', type: [String], isArray: true, required: false })
+    @IsArray()
+    @IsString({ each: true })
     @IsOptional()
-    size_guide?: string;
+    size_guide?: string[];
 
     @ApiProperty({ description: 'Category ID', example: '64f0a74e4e3e5f001d3c58a2' })
     @IsMongoId()
