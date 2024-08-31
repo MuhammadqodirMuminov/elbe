@@ -1,8 +1,8 @@
 // sizes.controller.ts
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { CreateSizeDto } from '../dto/size/create.dto';
-import { UpdateSizeDto } from '../dto/size/update.dto';
+import { CreateSizeDto } from '../dto/sizes/create.dto';
+import { UpdateSizeDto } from '../dto/sizes/update.dto';
 import { SizesDocument } from '../models/sizes.schema';
 import { SizesService } from '../services/sizes.service';
 
@@ -14,14 +14,14 @@ export class SizesController {
     @Post()
     @ApiOperation({ summary: 'Create a new size' })
     @ApiResponse({ status: 201, description: 'Size created successfully.', type: SizesDocument })
-    create(@Body() createSizeDto: CreateSizeDto) {
+    async create(@Body() createSizeDto: CreateSizeDto) {
         return this.sizesService.create(createSizeDto);
     }
 
     @Get()
     @ApiOperation({ summary: 'Get all sizes' })
     @ApiResponse({ status: 200, description: 'List of sizes.', type: [SizesDocument] })
-    findAll() {
+    async findAll() {
         return this.sizesService.findAll();
     }
 
@@ -33,21 +33,21 @@ export class SizesController {
     @Get(':id')
     @ApiOperation({ summary: 'Get size by ID' })
     @ApiResponse({ status: 200, description: 'Size details.', type: SizesDocument })
-    findOne(@Param('id') id: string) {
+    async findOne(@Param('id') id: string) {
         return this.sizesService.findOne(id);
     }
 
     @Patch(':id')
     @ApiOperation({ summary: 'Update size by ID' })
     @ApiResponse({ status: 200, description: 'Size updated successfully.', type: SizesDocument })
-    update(@Param('id') id: string, @Body() updateSizeDto: UpdateSizeDto) {
+    async update(@Param('id') id: string, @Body() updateSizeDto: UpdateSizeDto) {
         return this.sizesService.update(id, updateSizeDto);
     }
 
     @Delete(':id')
     @ApiOperation({ summary: 'Delete size by ID' })
     @ApiResponse({ status: 200, description: 'Size deleted successfully.' })
-    remove(@Param('id') id: string) {
+    async remove(@Param('id') id: string) {
         return this.sizesService.remove(id);
     }
 }
