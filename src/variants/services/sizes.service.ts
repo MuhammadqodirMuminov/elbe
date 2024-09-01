@@ -84,7 +84,7 @@ export class SizesService {
                 {
                     populate: [
                         { path: 'category', select: { products: false }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
-                        { path: 'size_guide', model: UploadDocuemnt.name, select: { _id: 1, url: 1 } },
+                        { path: 'size_guide', model: SizeGuideDocument.name, populate: [{ path: 'length', model: LengthDocument.name }] },
                     ],
                 },
             )
