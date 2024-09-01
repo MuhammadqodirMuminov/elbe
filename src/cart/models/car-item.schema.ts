@@ -16,6 +16,9 @@ export class CartItemsDocument extends AbstractDocument {
 
     @Prop({ type: Number, required: false, default: 0 })
     price: number;
+
+    @Prop({ type: String, required: false })
+    size?: string;
 }
 
 export const CartItemsSchema = SchemaFactory.createForClass(CartItemsDocument);

@@ -211,17 +211,12 @@ export class ProductsService {
                 },
             )
             .exec();
+
         if (!product) {
             throw new NotFoundException('Product not found');
         }
 
-        const recomended = await this.productModel.find({ category: product.category._id }).populate([
-            { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
-            { path: 'image', select: { _id: 1, url: 1 } },
-            { path: 'brand', populate: [{ path: 'logo', select: { _id: 1, url: 1 } }] },
-
-            { path: 'variants', model: VariantDocument.name, select: { productId: 0 }, populate: [{ path: 'images', select: { _id: 1, url: 1 }, model: UploadDocuemnt.name }] },
-        ]);
+        const recomended = await this.productModel.find({ category: product.category._id }).populate(populatedCostants);
 
         return { product, recomendations: recomended.slice(0, 8) };
     }
