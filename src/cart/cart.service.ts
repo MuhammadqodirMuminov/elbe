@@ -103,6 +103,7 @@ export class CartService {
             let cartItem = await this.cartItemModel.findOne({
                 variant_id: variant._id,
                 cart_id: cart._id,
+                size: updateActiveCart?.size,
             });
 
             if (!cartItem) {
@@ -110,6 +111,7 @@ export class CartService {
                     variant_id: variant._id,
                     quantity: updateActiveCart.quantity,
                     cart_id: cart._id,
+                    size: updateActiveCart?.size,
                     _id: new Types.ObjectId(),
                 });
                 await this.cartModel.updateOne({ _id: cart._id, is_order_created: false }, { $push: { items: cartItem._id } });
