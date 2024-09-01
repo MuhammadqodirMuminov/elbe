@@ -37,10 +37,10 @@ export class ProductsService {
     async create(body: CreateProductDto): Promise<ProductDocument> {
         try {
             // find the category
-            await this.categoryRepository.findOne({ _id: body.category });
+            const category = (await this.categoryRepository.findOne({ _id: body.category }))._id;
 
             // find the brand
-            const brand = await this.brandService.findOne(body.brand.toString());
+            const brand = (await this.brandService.findOne(body.brand.toString()))._id;
 
             // find the image
             const images = (await this.uploadService.findOne(body.image.toString()))._id;
@@ -48,8 +48,8 @@ export class ProductsService {
             // create the new product document and save it to the database
             const createdProduct = await this.productRepository.create({
                 ...body,
-                category: new Types.ObjectId(body.category),
-                brand: brand._id,
+                category: category,
+                brand: brand,
                 image: images,
                 variants: [],
                 sold_amount: 0,
@@ -124,6 +124,8 @@ export class ProductsService {
         }
 
         const queryFilter = await this.createProductsFilterQuery(query);
+
+        console.log(queryFilter);
 
         const [data, total] = await Promise.all([
             await this.productModel
@@ -311,6 +313,8 @@ export class ProductsService {
                             let allCtg: Types.ObjectId[] = [];
 
                             const isChild = await this.categoryService.isChildCategory(c);
+                            console.log({ isChild });
+
                             if (isChild) {
                                 allCtg.push(new Types.ObjectId(c));
                             } else {
