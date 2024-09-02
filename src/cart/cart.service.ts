@@ -144,7 +144,7 @@ export class CartService {
     }
 
     async findAll(): Promise<CartDocument[]> {
-        return this.cartModel.find().populate('user', '-password').populate('items.productId', {}, ProductDocument.name).exec();
+        return this.cartModel.find().populate('user', '-password').populate('items.variant_id.productId', {}, ProductDocument.name).exec();
     }
 
     async getRecomended(user: UserDocument) {
