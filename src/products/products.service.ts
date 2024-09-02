@@ -1,6 +1,7 @@
 import { BadRequestException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, QueryOptions, Types, UpdateQuery, UpdateWithAggregationPipeline } from 'mongoose';
+import { UserDocument } from 'src/auth/users/models/user.schema';
 import { BrandsService } from 'src/brands/brands.service';
 import { CategoriesService } from 'src/categories/categories.service';
 import { CategoryRepository } from 'src/categories/category.repository';
@@ -11,6 +12,7 @@ import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { UploadService } from 'src/upload/upload.service';
 import { VariantDocument } from 'src/variants/models/variant.schema';
 import { VariantsService } from 'src/variants/services/variants.service';
+import { WishlistsService } from 'src/wishlists/wishlists.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -31,6 +33,7 @@ export class ProductsService {
         private readonly brandService: BrandsService,
         private readonly collectionService: CollectionsService,
         private readonly categoryService: CategoriesService,
+        @Inject(forwardRef(() => WishlistsService)) private readonly wishlistService: WishlistsService,
     ) {}
 
     // this is create a new ProductDocument
@@ -61,31 +64,8 @@ export class ProductsService {
         }
     }
 
-    private generateSortData(sortBy: ProductSortTypes): Record<string, any> {
-        let sort: Record<string, any> = { createdAt: -1 };
-
-        switch (sortBy) {
-            case ProductSortTypes.CHEAPEST:
-                sort = { price: 1 };
-                break;
-            case ProductSortTypes.EXPENSIVE:
-                sort = { price: -1 };
-                break;
-            case ProductSortTypes.BESTSELLERS:
-                sort = { sold_amount: -1 };
-                break;
-            case ProductSortTypes.OFFERS:
-                sort = { isOnOffer: -1, price: 1 };
-                break;
-            case ProductSortTypes.NEWEST:
-            default:
-                sort = { createdAt: -1 };
-                break;
-        }
-        return sort;
-    }
-
-    async findAllWithSizeAndColor(query: QueryProductDto) {
+    // this function is find products woth the category
+    async findAllWithSizeAndColor(query: QueryProductDto, user?: UserDocument) {
         const { page = 1, limit = 10, sortBy } = query;
         const sort = this.generateSortData(sortBy);
         const queryFilter = await this.createProductsFilterQuery(query);
@@ -113,19 +93,24 @@ export class ProductsService {
             await this.productModel.countDocuments(queryFilter).exec(),
         ]);
 
+        if (user) {
+            const wishlists = await this.getProductsWithWishlist(data, user);
+
+            return { data: wishlists, total, page, limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
+        }
+
         return { data, total, page, limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
     }
 
-    async findAll(query: QueryProductDto) {
+    // find all products
+    async findAll(query: QueryProductDto, user?: UserDocument) {
         const { page = 1, limit = 10, sortBy } = query;
         const sort = this.generateSortData(sortBy);
+
         if (query.size || query.color) {
-            return await this.findAllWithSizeAndColor(query);
+            return await this.findAllWithSizeAndColor(query, user);
         }
-
         const queryFilter = await this.createProductsFilterQuery(query);
-
-        console.log(queryFilter);
 
         const [data, total] = await Promise.all([
             await this.productModel
@@ -138,9 +123,16 @@ export class ProductsService {
             await this.productModel.countDocuments(queryFilter).exec(),
         ]);
 
-        return { data, total, page, limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
+        if (user) {
+            const wishlists = await this.getProductsWithWishlist(data, user);
+
+            return { data: wishlists, total, page, limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
+        }
+
+        return { data: data, total, page, limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
     }
 
+    // find All products with by collection
     async getByCollection(collectionId: string, query: QueryProductDto) {
         let total: number;
         let products: ProductDocument[];
@@ -177,6 +169,7 @@ export class ProductsService {
         return { data: products, total, page: +page, limit: +limit, totalPages: Math.ceil(total / +limit), hasNextPage: +page * +limit < total, hasPrevPage: +page > 1 };
     }
 
+    // find one product
     async findOne(id: string): Promise<ProductDocument> {
         const product = await this.productModel.findById(id, {}, { populate: populatedCostants }).exec();
         if (!product) {
@@ -186,6 +179,7 @@ export class ProductsService {
         return product;
     }
 
+    // getOne
     async getOne(id: string): Promise<ProductDocument> {
         const product = await this.productModel.findById(id, {}).exec();
         if (!product) {
@@ -195,14 +189,22 @@ export class ProductsService {
         return product;
     }
 
+    // findProductsby Query
     async getAllWithQuery(filterQuery: FilterQuery<ProductDocument>, query?: QueryOptions<ProductDocument>) {
         return await this.productModel.find(filterQuery, {}, query).exec();
     }
 
+    // findOneProductByQuery
     async getOneWithQuery(filterQuery: FilterQuery<ProductDocument>, query?: QueryOptions<ProductDocument>) {
         return await this.productModel.findOne(filterQuery, {}, query).exec();
     }
 
+    // updateProductsByQuery
+    async updateWithQuery(filter: FilterQuery<ProductDocument>, update?: UpdateQuery<ProductDocument> | UpdateWithAggregationPipeline) {
+        return await this.productModel.updateOne(filter, update);
+    }
+
+    // detail of a product
     async detail(id: string) {
         const product = await this.productModel
             .findById(
@@ -223,6 +225,7 @@ export class ProductsService {
         return { product, recomendations: recomended.slice(0, 8) };
     }
 
+    // update the product
     async update(id: string, body: UpdateProductDto): Promise<ProductDocument> {
         const product = await this.getOne(id);
 
@@ -249,10 +252,7 @@ export class ProductsService {
         return updatedProduct;
     }
 
-    async updateWithQuery(filter: FilterQuery<ProductDocument>, update?: UpdateQuery<ProductDocument> | UpdateWithAggregationPipeline) {
-        return await this.productModel.updateOne(filter, update);
-    }
-
+    // remove a product from the db
     async remove(id: string): Promise<any> {
         const product = await this.getOne(id);
 
@@ -271,6 +271,24 @@ export class ProductsService {
         return deletedProduct;
     }
 
+    // HELPER FUNCTIONS
+
+    // get products with wishlist
+    async getProductsWithWishlist(products: ProductDocument[], user: UserDocument) {
+        const wishlists = await this.wishlistService.getAll(user);
+
+        const withWishlist = products.map((product) => {
+            const item = JSON.parse(JSON.stringify(product));
+
+            const likedProduct = wishlists.products.find((w) => w._id.toString() === item._id.toString());
+
+            return { ...item, isLiked: likedProduct ? true : false };
+        });
+
+        return withWishlist;
+    }
+
+    // validate filterquery in findAll
     async validateFilterQuery(query: QueryProductDto) {
         let validatedQuery: Partial<QueryProductDto> = { ...query };
 
@@ -301,6 +319,7 @@ export class ProductsService {
         return validatedQuery;
     }
 
+    // create query object
     async createProductsFilterQuery(query: QueryProductDto) {
         const validatedFilterQuery = await this.validateFilterQuery(query);
         const queryFilter: Record<string, any> = {};
@@ -361,5 +380,30 @@ export class ProductsService {
             ];
         }
         return queryFilter;
+    }
+
+    // create sort object
+    private generateSortData(sortBy: ProductSortTypes): Record<string, any> {
+        let sort: Record<string, any> = { createdAt: -1 };
+
+        switch (sortBy) {
+            case ProductSortTypes.CHEAPEST:
+                sort = { price: 1 };
+                break;
+            case ProductSortTypes.EXPENSIVE:
+                sort = { price: -1 };
+                break;
+            case ProductSortTypes.BESTSELLERS:
+                sort = { sold_amount: -1 };
+                break;
+            case ProductSortTypes.OFFERS:
+                sort = { isOnOffer: -1, price: 1 };
+                break;
+            case ProductSortTypes.NEWEST:
+            default:
+                sort = { createdAt: -1 };
+                break;
+        }
+        return sort;
     }
 }
