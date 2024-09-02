@@ -7,6 +7,7 @@ import { ProductsService } from 'src/products/products.service';
 import { UploadDocuemnt } from 'src/upload/models/upload.schema';
 import { VariantDocument } from 'src/variants/models/variant.schema';
 import { VariantsService } from 'src/variants/services/variants.service';
+import { PopulateCartConstants } from './cart.constants';
 import { CartRepository } from './cart.repository';
 import { UpdateCartDto } from './dto/create-cart.dto';
 import { CartItemsDocument } from './models/car-item.schema';
@@ -27,69 +28,11 @@ export class CartService {
             { user: new Types.ObjectId(user._id), is_order_created: false },
             {},
             {
-                populate: [
-                    {
-                        path: 'user',
-                        select: { _id: 1, firstname: 1, lastname: 1, email: 1 },
-                    },
-                    {
-                        path: 'items',
-                        model: CartItemsDocument.name,
-                        select: { cart_id: 0 },
-                        populate: [
-                            {
-                                path: 'variant_id',
-                                model: VariantDocument.name,
-                                populate: [
-                                    {
-                                        path: 'images',
-                                        model: UploadDocuemnt.name,
-                                        select: { _id: 1, url: 1 },
-                                    },
-                                    {
-                                        path: 'productId',
-                                        model: ProductDocument.name,
-                                        select: { _id: 1, name: 1, image: 1, description: 1, price: 1 },
-                                        populate: [
-                                            {
-                                                path: 'image',
-                                                model: UploadDocuemnt.name,
-                                                select: { _id: 1, url: 1 },
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
+                populate: PopulateCartConstants,
             },
         );
         if (!existCart) {
-            return (await this.cartModel.create({ user: new Types.ObjectId(user._id), is_order_created: false, _id: new Types.ObjectId() })).populate([
-                {
-                    path: 'user',
-                    select: { _id: 1, firstname: 1, lastname: 1, email: 1 },
-                },
-                {
-                    path: 'items',
-                    model: CartItemsDocument.name,
-                    select: { cart_id: 0 },
-                    populate: [
-                        {
-                            path: 'variant_id',
-                            model: VariantDocument.name,
-                            populate: [
-                                {
-                                    path: 'images',
-                                    model: UploadDocuemnt.name,
-                                    select: { _id: 1, url: 1 },
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ]);
+            return (await this.cartModel.create({ user: new Types.ObjectId(user._id), is_order_created: false, _id: new Types.ObjectId() })).populate(PopulateCartConstants);
         }
         return existCart;
     }
