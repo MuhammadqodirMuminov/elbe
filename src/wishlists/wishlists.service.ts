@@ -1,12 +1,11 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { UserDocument } from 'src/auth/users/models/user.schema';
 import { UsersService } from 'src/auth/users/users.service';
 import { ProductDocument } from 'src/products/models/product.schema';
+import { populatedCostants } from 'src/products/products.constants';
 import { ProductsService } from 'src/products/products.service';
-import { UploadDocuemnt } from 'src/upload/models/upload.schema';
-import { VariantDocument } from 'src/variants/models/variant.schema';
 import { CreateWishlistDto } from './dto/create-wishlist.dto';
 import { WishlistDocument } from './models/wishlist.schema';
 
@@ -15,7 +14,7 @@ export class WishlistsService {
     constructor(
         @InjectModel(WishlistDocument.name) private readonly wishlistModel: Model<WishlistDocument>,
         private readonly userService: UsersService,
-        private readonly productService: ProductsService,
+        @Inject(forwardRef(() => ProductsService)) private readonly productService: ProductsService,
     ) {}
 
     async create(createWishlistDto: CreateWishlistDto, user: UserDocument) {
@@ -36,7 +35,7 @@ export class WishlistsService {
         }
     }
 
-    async getAll(user: UserDocument) {
+    async getAll(user: UserDocument): Promise<WishlistDocument> {
         const wishlist = await this.wishlistModel.findOne(
             { user: new Types.ObjectId(user._id) },
             {},
@@ -46,30 +45,7 @@ export class WishlistsService {
                     {
                         path: 'products',
                         model: ProductDocument.name,
-                        populate: [
-                            {
-                                path: 'image',
-                                select: { _id: 1, url: 1 },
-                            },
-                            {
-                                path: 'category',
-                                select: { products: 0 },
-                            },
-                            {
-                                path: 'brand',
-                            },
-                            {
-                                path: 'variants',
-                                model: VariantDocument.name,
-                                populate: [
-                                    {
-                                        path: 'images',
-                                        model: UploadDocuemnt.name,
-                                        select: { _id: 1, url: 1 },
-                                    },
-                                ],
-                            },
-                        ],
+                        populate: populatedCostants,
                     },
                 ],
             },

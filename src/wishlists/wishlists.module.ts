@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { UsersModule } from 'src/auth/users/users.module';
 import { DatabaseModule } from 'src/database/database.module';
 import { ProductsModule } from 'src/products/products.module';
@@ -7,7 +7,7 @@ import { WishlistsController } from './wishlists.controller';
 import { WishlistsService } from './wishlists.service';
 
 @Module({
-    imports: [ProductsModule, UsersModule, DatabaseModule.forFeature([{ name: WishlistDocument.name, schema: WishlistSchema }])],
+    imports: [forwardRef(() => ProductsModule), UsersModule, DatabaseModule.forFeature([{ name: WishlistDocument.name, schema: WishlistSchema }])],
     controllers: [WishlistsController],
     providers: [WishlistsService],
     exports: [WishlistsService],

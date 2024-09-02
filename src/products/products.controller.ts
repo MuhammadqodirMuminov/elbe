@@ -1,5 +1,8 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from 'src/auth/current-user.decorator';
+import JwtAuthGuard from 'src/auth/guards/jwt-auth.guard';
+import { UserDocument } from 'src/auth/users/models/user.schema';
 import { CreateProductDto } from './dto/create-product.dto';
 import { QueryProductDto } from './dto/query.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -18,6 +21,13 @@ export class ProductsController {
     @Get()
     async findAll(@Query() query: QueryProductDto) {
         return await this.productsService.findAll(query);
+    }
+
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard)
+    @Get('with-wishlists')
+    async withWishlists(@Query() query: QueryProductDto, @CurrentUser() user: UserDocument) {
+        return await this.productsService.findAll(query, user);
     }
 
     @Get('get-by-collection/:collectionId')
