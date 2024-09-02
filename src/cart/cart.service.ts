@@ -178,7 +178,7 @@ export class CartService {
             return { message: 'No recomended producs found' };
         }
         let category = await this.productService.getAllWithQuery(
-            { category: new Types.ObjectId(userCart.items[0].variant_id.productId.category) },
+            { category: new Types.ObjectId(userCart.items?.[0]?.variant_id?.productId?.category) },
             {
                 populate: [
                     { path: 'category', select: { products: 0 }, populate: [{ path: 'image', select: { _id: 1, url: 1 } }] },
