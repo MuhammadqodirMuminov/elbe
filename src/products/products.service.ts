@@ -229,13 +229,13 @@ export class ProductsService {
         const updatedData: Record<string, any> = { ...body };
 
         if (body.category) {
-            const category = await this.categoryRepository.findOne({ _id: body.category });
-            updatedData.category = category._id;
+            const category = (await this.categoryRepository.findOne({ _id: body.category }))._id;
+            updatedData.category = category;
         }
 
         if (body.brand) {
-            const brand = await this.brandService.findOne(body.brand.toString());
-            updatedData.brand = brand._id;
+            const brand = (await this.brandService.findOne(body.brand.toString()))._id;
+            updatedData.brand = brand;
         }
 
         if (body.image) {
