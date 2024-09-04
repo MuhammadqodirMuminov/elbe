@@ -11,6 +11,9 @@ export class SizeGuideDocument extends AbstractDocument {
 
     @Prop({ type: Types.ObjectId, required: true, ref: UploadDocuemnt.name })
     guide: Types.ObjectId;
+
+    @Prop({ type: String, required: false })
+    description?: string;
 }
 
 export const sizeGuideSchema = SchemaFactory.createForClass(SizeGuideDocument);
