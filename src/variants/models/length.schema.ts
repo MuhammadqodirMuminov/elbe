@@ -8,6 +8,9 @@ export class LengthDocument extends AbstractDocument {
 
     @Prop({ type: String, required: true })
     value: string;
+
+    @Prop({ type: String, required: false })
+    description?: string;
 }
 
 export const lengthSchema = SchemaFactory.createForClass(LengthDocument);

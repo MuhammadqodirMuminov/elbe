@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateLengthDto {
     @ApiProperty({ description: 'Key for the length', required: true, example: 'medium' })
@@ -11,4 +11,9 @@ export class CreateLengthDto {
     @IsString()
     @IsNotEmpty()
     value: string;
+
+    @ApiProperty({ description: 'Description for the length', required: false, example: 'Length of description' })
+    @IsString()
+    @IsOptional()
+    description?: string;
 }
