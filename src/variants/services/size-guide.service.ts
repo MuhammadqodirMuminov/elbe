@@ -19,7 +19,7 @@ export class SizeGuideService {
     async create(createSizeGuideDto: CreateSizeGuideDto): Promise<SizeGuideDocument> {
         const length = await this.lengthService.findOne(createSizeGuideDto.length);
         const guide = await this.uploadService.findOne(createSizeGuideDto.guide);
-        const newSizeGuide = new this.sizeGuideModel({ length: length._id, guide: guide._id, _id: new Types.ObjectId() });
+        const newSizeGuide = new this.sizeGuideModel({ length: length._id, description: createSizeGuideDto.description, guide: guide._id, _id: new Types.ObjectId() });
         return newSizeGuide.save();
     }
 
