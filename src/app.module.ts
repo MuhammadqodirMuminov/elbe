@@ -20,6 +20,9 @@ import { UploadModule } from './upload/upload.module';
 import { VariantsModule } from './variants/variants.module';
 import { WishlistsModule } from './wishlists/wishlists.module';
 import { GiftsModule } from './gifts/gifts.module';
+import { AppointmentModule } from './appointment/appointment.module';
+import { BranchesModule } from './branches/branches.module';
+import { ServicesModule } from './services/services.module';
 
 @Module({
     imports: [
@@ -62,6 +65,9 @@ import { GiftsModule } from './gifts/gifts.module';
         StripeModule,
         WishlistsModule,
         GiftsModule,
+        AppointmentModule,
+        BranchesModule,
+        ServicesModule,
     ],
 })
 export class AppModule {}
