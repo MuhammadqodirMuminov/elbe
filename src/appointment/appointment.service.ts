@@ -1,11 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { BookingsService } from 'src/bookings/bookings.service';
 import { BranchDocument } from 'src/branches/models/branch.schema';
 import { ServiceDocument } from 'src/services/models/service.schema';
 import { ServicesService } from 'src/services/services.service';
+import { AppointmentPopulate } from './appointment.constants';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
-import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+import { AppointmentQueryDto, UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { Appointment } from './models/appointment.schema';
 
 @Injectable()
@@ -13,6 +15,7 @@ export class AppointmentService {
     constructor(
         @InjectModel(Appointment.name) private readonly appintmentModel: Model<Appointment>,
         private readonly servicesService: ServicesService,
+        @Inject(forwardRef(() => BookingsService)) private readonly bookingsService: BookingsService,
     ) {}
 
     async create(createAppointmentDto: CreateAppointmentDto) {
@@ -30,46 +33,40 @@ export class AppointmentService {
             {},
             {},
             {
-                populate: [
-                    {
-                        path: 'service',
-                        model: ServiceDocument.name,
-                        populate: [
-                            {
-                                path: 'branches',
-                                model: BranchDocument.name,
-                            },
-                        ],
-                    },
-                ],
+                populate: AppointmentPopulate,
             },
         );
     }
 
-    async findByServiceId(serviceId: string) {
+    async findByServiceId(serviceId: string, query: AppointmentQueryDto) {
+        const bookings = await this.bookingsService.findByService(serviceId, query);
+
         const appointment = await this.appintmentModel.find(
             { service: { $in: [new Types.ObjectId(serviceId)] } },
             {},
             {
-                populate: [
-                    {
-                        path: 'service',
-                        model: ServiceDocument.name,
-                        populate: [
-                            {
-                                path: 'branches',
-                                model: BranchDocument.name,
-                            },
-                        ],
-                    },
-                ],
+                populate: AppointmentPopulate,
             },
         );
 
         if (!appointment) {
             throw new NotFoundException('No appointment found!');
         }
-        return appointment;
+
+        const filteredAppintments = appointment.map((a) => {
+            const item = JSON.parse(JSON.stringify(a));
+            const bookedItem = bookings.find((book) => book.appointment_id.toString() === item._id.toString());
+
+            if (bookedItem) {
+                item.desabled = true;
+                return item;
+            } else {
+                item.disabled = false;
+                return item;
+            }
+        });
+
+        return filteredAppintments;
     }
 
     async findOne(id: string) {
