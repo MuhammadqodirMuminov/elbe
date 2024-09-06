@@ -1,8 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AppointmentService } from './appointment.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
-import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+import { AppointmentQueryDto, UpdateAppointmentDto } from './dto/update-appointment.dto';
 
 @ApiTags('appointment')
 @Controller('appointment')
@@ -20,8 +20,8 @@ export class AppointmentController {
     }
 
     @Get('byService/:serviceId')
-    async findByServiceId(@Param('serviceId') serviceId: string) {
-        return this.appointmentService.findByServiceId(serviceId);
+    async findByServiceId(@Param('serviceId') serviceId: string, @Query() query: AppointmentQueryDto) {
+        return this.appointmentService.findByServiceId(serviceId, query);
     }
 
     @Get(':id')

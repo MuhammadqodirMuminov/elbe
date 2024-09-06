@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { AppointmentModule } from 'src/appointment/appointment.module';
 import { BranchesModule } from 'src/branches/branches.module';
 import { DatabaseModule } from 'src/database/database.module';
@@ -9,7 +9,7 @@ import { BookingDocument, bookingsSchema } from './models/booking.schema';
 
 @Module({
     imports: [
-        AppointmentModule,
+        forwardRef(() => AppointmentModule),
         ServicesModule,
         BranchesModule,
         DatabaseModule,

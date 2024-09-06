@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { FilterQuery, Model } from 'mongoose';
+import { FilterQuery, Model, Types } from 'mongoose';
 import { AppointmentService } from 'src/appointment/appointment.service';
+import { AppointmentQueryDto } from 'src/appointment/dto/update-appointment.dto';
 import { BranchesService } from 'src/branches/branches.service';
 import { ServicesService } from 'src/services/services.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
@@ -14,7 +15,7 @@ export class BookingsService {
         @InjectModel(BookingDocument.name) private readonly bookingModel: Model<BookingDocument>,
         private readonly servicesService: ServicesService,
         private readonly branchesService: BranchesService,
-        private readonly appintmentService: AppointmentService,
+        @Inject(forwardRef(() => AppointmentService)) private readonly appintmentService: AppointmentService,
     ) {}
 
     async create(createBookingDto: CreateBookingDto) {
@@ -22,7 +23,13 @@ export class BookingsService {
         const branch = await this.branchesService.findOne(createBookingDto.branchId);
         const appointment = await this.appintmentService.findOne(createBookingDto.appointmentId);
 
-        return await this.bookingModel.create({ ...createBookingDto, service_id: service._id, branch_id: branch._id, appointment_id: appointment._id });
+        return await this.bookingModel.create({
+            ...createBookingDto,
+            service_id: service._id,
+            branch_id: branch._id,
+            appointment_id: appointment._id,
+            _id: new Types.ObjectId(),
+        });
     }
 
     async findAll(query: BookingsQuery) {
@@ -41,13 +48,53 @@ export class BookingsService {
             }
         }
 
-        return await this.bookingModel.find(filter, {}, { populate: ['service_id', 'branch_id', 'appointment_id'] });
+        return await this.bookingModel.find(
+            filter,
+            {},
+            {
+                populate: ['service_id', 'branch_id', 'appointment_id'],
+            },
+        );
     }
 
-    async findOne(id: number) {
-        const bookings = await this.bookingModel.findOne({ _id: id }, {}, { populate: ['service_id', 'branch_id', 'appointment_id'] });
+    async findByService(serviceId: string, query: AppointmentQueryDto) {
+        const { date } = query;
+
+        let filterDate: any = {};
+
+        if (date) {
+            const selectedDate = new Date(date);
+
+            const startOfDay = new Date(selectedDate);
+            startOfDay.setUTCHours(0, 0, 0, 0);
+
+            const endOfDay = new Date(selectedDate);
+            endOfDay.setUTCHours(23, 59, 59, 999);
+
+            filterDate = {
+                createdAt: {
+                    $gte: startOfDay,
+                    $lte: endOfDay,
+                },
+            };
+        }
+
+        const filter = {
+            service_id: new Types.ObjectId(serviceId),
+            ...filterDate,
+        };
+
+        const bookings = await this.bookingModel.find(filter);
+
+        return bookings;
+    }
+
+    async findOne(id: string) {
+        const bookings = await this.bookingModel.findOne({ _id: id }, {}, { populate: ['service_id', 'service_id.branches', 'branch_id', 'appointment_id', 'appointment_id.service'] });
         if (!bookings) {
             throw new NotFoundException('Bookings not found!');
         }
+
+        return bookings;
     }
 }

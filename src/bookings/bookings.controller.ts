@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { AppointmentQueryDto } from 'src/appointment/dto/update-appointment.dto';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { BookingsQuery } from './dto/update-booking.dto';
@@ -19,8 +20,13 @@ export class BookingsController {
         return this.bookingsService.findAll(query);
     }
 
+    @Get('byService/:serviceId')
+    async findByService(@Query() query: AppointmentQueryDto, @Param('serviceId') serviceId: string) {
+        return await this.bookingsService.findByService(serviceId, query);
+    }
+
     @Get(':id')
     async findOne(@Param('id') id: string) {
-        return this.bookingsService.findOne(+id);
+        return this.bookingsService.findOne(id);
     }
 }
