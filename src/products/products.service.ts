@@ -232,21 +232,18 @@ export class ProductsService {
         const updatedData: Record<string, any> = { ...body };
 
         if (body.category) {
-            delete updatedData.category
             const category = (await this.categoryRepository.findOne({ _id: body.category }))._id;
-            updatedData.category = category;
+            updatedData.category = new Types.ObjectId(category);
         }
 
         if (body.brand) {
-            delete updatedData.brand
             const brand = (await this.brandService.findOne(body.brand.toString()))._id;
-            updatedData.brand = brand;
+            updatedData.brand = new Types.ObjectId(brand);
         }
 
         if (body.image) {
-            delete updatedData.image
             const images = (await this.uploadService.findOne(body.image.toString()))._id;
-            updatedData.image = images;
+            updatedData.image = new Types.ObjectId(images);
             await this.uploadService.deleteMedia(product.image.toString());
         }
 
