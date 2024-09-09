@@ -247,7 +247,7 @@ export class ProductsService {
             await this.uploadService.deleteMedia(product.image.toString());
         }
 
-        const updatedProduct = await this.productModel.findByIdAndUpdate(id, body, { new: true }).exec();
+        const updatedProduct = await this.productModel.findByIdAndUpdate(id, updatedData, { new: true }).exec();
 
         return updatedProduct;
     }
