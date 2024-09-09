@@ -232,13 +232,13 @@ export class ProductsService {
         const updatedData: Record<string, any> = { ...body };
 
         if (body.category) {
-            const category = (await this.categoryRepository.findOne({ _id: body.category }))._id;
-            updatedData.category = new Types.ObjectId(category);
+            const category = await this.categoryRepository.findOne({ _id: body.category });
+            updatedData.category = new Types.ObjectId(category._id);
         }
 
         if (body.brand) {
-            const brand = (await this.brandService.findOne(body.brand.toString()))._id;
-            updatedData.brand = new Types.ObjectId(brand);
+            const brand = await this.brandService.findOne(body.brand.toString());
+            updatedData.brand = new Types.ObjectId(brand._id);
         }
 
         if (body.image) {
