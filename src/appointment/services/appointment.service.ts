@@ -5,10 +5,10 @@ import { BookingsService } from 'src/bookings/bookings.service';
 import { BranchDocument } from 'src/branches/models/branch.schema';
 import { ServiceDocument } from 'src/services/models/service.schema';
 import { ServicesService } from 'src/services/services.service';
-import { AppointmentPopulate } from './appointment.constants';
-import { CreateAppointmentDto } from './dto/create-appointment.dto';
-import { AppointmentQueryDto, UpdateAppointmentDto } from './dto/update-appointment.dto';
-import { Appointment } from './models/appointment.schema';
+import { AppointmentPopulate } from '../appointment.constants';
+import { CreateAppointmentDto } from '../dto/create-appointment.dto';
+import { AppointmentQueryDto, UpdateAppointmentDto } from '../dto/update-appointment.dto';
+import { Appointment } from '../models/appointment.schema';
 
 @Injectable()
 export class AppointmentService {

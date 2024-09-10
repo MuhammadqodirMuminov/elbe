@@ -1,8 +1,8 @@
 import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
-import { AppointmentService } from 'src/appointment/appointment.service';
 import { AppointmentQueryDto } from 'src/appointment/dto/update-appointment.dto';
+import { AppointmentService } from 'src/appointment/services/appointment.service';
 import { BranchesService } from 'src/branches/branches.service';
 import { ServicesService } from 'src/services/services.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
