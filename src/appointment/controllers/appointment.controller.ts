@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { AppointmentService } from './appointment.service';
-import { CreateAppointmentDto } from './dto/create-appointment.dto';
-import { AppointmentQueryDto, UpdateAppointmentDto } from './dto/update-appointment.dto';
+import { CreateAppointmentDto } from '../dto/create-appointment.dto';
+import { AppointmentQueryDto, UpdateAppointmentDto } from '../dto/update-appointment.dto';
+import { AppointmentService } from '../services/appointment.service';
 
 @ApiTags('appointment')
 @Controller('appointment')
