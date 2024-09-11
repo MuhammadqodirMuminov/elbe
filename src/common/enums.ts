@@ -42,3 +42,8 @@ export enum LengthType {
     REGULAR = 'REGULAR',
     LONG = 'LONG',
 }
+
+export enum ChAtBotEnum {
+    USER = 'user',
+    ASISTANT = 'asistant',
+}
